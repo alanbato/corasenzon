@@ -20,7 +20,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".activities.ScanActivity" />
-        <activity android:name=".activities.DetailActivity"></activity>
+        <activity android:name=".activities.DetailActivity" />
+        <activity android:name=".activities.ScanListActivity" />
+        <activity android:name=".activities.SettingsActivity"></activity>
     </application>
 
 </manifest>
