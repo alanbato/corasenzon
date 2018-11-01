@@ -9,7 +9,7 @@ import android.os.Parcelable
 
 @Entity(tableName = "Medicion")
 @TypeConverters(Converters::class)
-data class Medicion (@ColumnInfo(name = "presionMedia") var presionMedia: Double?,
+data class Medicion (@ColumnInfo(name = "pressureAvg") var presionMedia: Double?,
                   @ColumnInfo(name = "presionSiastolica") var presionSiastolica: Double?,
                   @ColumnInfo(name = "presionDiastolica") var presionDiastolica: Double?) : Parcelable {
     @ColumnInfo(name = "_id")

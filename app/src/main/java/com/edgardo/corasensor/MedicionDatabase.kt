@@ -7,10 +7,11 @@ import android.arch.persistence.room.TypeConverters
 import android.content.Context
 
 
-@Database(entities = arrayOf(Medicion::class), version = 2, exportSchema = false)
+@Database(entities = arrayOf(Medicion::class, Dato::class), version = 2, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class MedicionDatabase : RoomDatabase(){
     abstract fun medicionDao(): MedicionDao
+    abstract fun datoDao() : DatoDao
 
     companion object {
         private val DATABASE_NAME = "MedicionDB.db"
