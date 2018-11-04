@@ -29,5 +29,16 @@
     <string name="label_detail_pressure_diastolic">Diastolic</string>
     <string name="label_detail_pressure_diastolic_manual">DiastolicM</string>
 
+    <string name="button_detail_save">Save</string>
+
+
+    <!--settings view-->
     <string name="action_settings">Settings</string>
+    <string name="button_discover">Discover Devices</string>
+    <string name="label_connection_devices">Connected to: \u0020 </string>
+
+    <string name="device_bt_capability">This devices dosnt support bluetooth</string>
+    <string name="msg_enable_bluetooth">BT is off do you what to turn it on ?</string>
+    <string name="msg_bt_pairing">Pairing devices\u0020</string>
+    <string name="msg_bt_searching">searching...</string>
 </resources>

@@ -39,9 +39,9 @@ class ScanAdapter(var scans: List<Scan>,
 
         fun bind(index: Int) {
             scan = scans[index]
-            itemView.text_pres_dias_r.text = scan.pressureDiastolic.toString()
-            itemView.text_pres_med_r.text = scan.pressureAvg.toString()
-            itemView.text_pres_sis_r.text = scan.pressureSystolic.toString()
+            itemView.text_id.text = scan._id.toString()
+            itemView.text_date.text = scan.scanDate
+            itemView.text_pressure.text = "${scan.pressureSystolic.toString()} / ${scan.pressureDiastolic}"
         }
 
         override fun onClick(p0: View?) {
