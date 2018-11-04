@@ -41,4 +41,6 @@
     <string name="msg_enable_bluetooth">BT is off do you what to turn it on ?</string>
     <string name="msg_bt_pairing">Pairing devices\u0020</string>
     <string name="msg_bt_searching">searching...</string>
+    <string name="msg_bt_connection_lost">Connection lost</string>
+    <string name="msg_bt_discovering_mode">Device is now visible</string>
 </resources>

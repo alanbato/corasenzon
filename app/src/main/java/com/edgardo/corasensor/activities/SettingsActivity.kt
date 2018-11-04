@@ -31,7 +31,7 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
     // Communication UUID
     private val uuidConnection = UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66")
     // List adapter
-    lateinit var devicesBTListAdapter: DevicesBTListAdapter
+//    lateinit var devicesBTListAdapter: DevicesBTListAdapter
     // Bluetooth adapter
     var btAdapter: BluetoothAdapter? = null
     // Bluetooth connection
@@ -45,22 +45,25 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
 
-        btDevices = ArrayList()
+        supportActionBar!!.title = applicationContext.getString(R.string.action_settings)
 
-        btAdapter = BluetoothAdapter.getDefaultAdapter()
-        validateBT()
+        btDevices = ArrayList()
 
         //Broadcasts when bond state changes (ie:pairing)
         val filter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
-        registerReceiver(mBroadcastReceiver4, filter)
+        registerReceiver(pairingStatusChange, filter)
 
+        btAdapter = BluetoothAdapter.getDefaultAdapter()
+        validateBTOn()
+
+        list_new_devices.onItemClickListener = this
         button_discover.setOnClickListener { click(it) }
     }
 
     /**
      * Function to validate if the phone have BT and check if is turn on
      */
-    private fun validateBT() {
+    private fun validateBTOn() {
         if (btAdapter == null) {
             AlertDialog.Builder(this).setMessage(
                     applicationContext.getString(R.string.device_bt_capability)
@@ -92,12 +95,14 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
     }
 
-
+    /**
+     * Button click action
+     */
     private fun click(v: View) {
 
         when (v.id) {
             R.id.button_discover -> {
-                startDiscover(v)
+                discover()
             }
         }
 
@@ -129,8 +134,7 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
     /**
      * Start looking fot devices
      */
-
-    private fun startDiscover(v: View) {
+    private fun discover() {
         Log.d(_tag, "Discovering: Looking for unpaired devices.")
         Toast
                 .makeText(this, applicationContext.getString(R.string.msg_bt_searching),
@@ -139,6 +143,7 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
         // Check for permissions on manifest
         checkBTPermissions()
+        enableDicvoveringMode()
 
         if (btAdapter!!.isDiscovering) {
             btAdapter!!.cancelDiscovery()
@@ -151,10 +156,11 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
         }
         if (!btAdapter!!.isDiscovering) {
 
-
             btAdapter!!.startDiscovery()
             val discoverDevicesIntent = IntentFilter(BluetoothDevice.ACTION_FOUND)
+//            Log.d(_tag, "Discovering: flag 3.")
             registerReceiver(updateListAdapter, discoverDevicesIntent)
+
         }
     }
 
@@ -173,11 +179,12 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
                 val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
                 btDevices.add(device)
                 Log.d(_tag, "onReceive: " + device.name + ": " + device.address)
-                devicesBTListAdapter = DevicesBTListAdapter(context, R.layout.row_devices_bt, btDevices)
+                val devicesBTListAdapter = DevicesBTListAdapter(context, R.layout.row_devices_bt, btDevices)
                 list_new_devices.adapter = devicesBTListAdapter
             }
         }
     }
+
 
     override fun onItemClick(adapterView: AdapterView<*>, view: View, i: Int, l: Long) {
         //first cancel discovery because its very memory intensive.
@@ -220,12 +227,16 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
      */
     private fun checkBTPermissions() {
 
-        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH)
+        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                         != PackageManager.PERMISSION_GRANTED) &&
-                (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADMIN)
+                (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
                         != PackageManager.PERMISSION_GRANTED)) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.BLUETOOTH,
-                    Manifest.permission.BLUETOOTH), BLUETOOTH_REQUEST_PERMISSION)
+            Log.d(_tag, "Permission: GRANTED")
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION), BLUETOOTH_REQUEST_PERMISSION)
+
+        } else {
+            Log.d(_tag, "Permission: DENIED")
 
         }
 
@@ -235,7 +246,6 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
      * Start the connection with the device
      * Has to be paired first
      */
-    //create method for starting connection
     private fun startConnection() {
         startBTConnection(selectedBtDevices, uuidConnection)
     }
@@ -249,12 +259,31 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
         btConnection.startClient(device, uuid)
     }
 
+    /**
+     * Make device visible for 300 seconds
+     */
+    private fun enableDicvoveringMode() {
+        Log.d(_tag, "enableDicvoveringMode: Making device discoverable for 300 seconds.")
+
+        Toast
+                .makeText(this, applicationContext.getString(R.string.msg_bt_discovering_mode),
+                        Toast.LENGTH_SHORT)
+                .show()
+
+        val discoverableIntent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
+        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
+        startActivity(discoverableIntent)
+
+        val intentFilter = IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED)
+        registerReceiver(onBTChangeState, intentFilter)
+
+    }
 
     /**
-     * Broadcast Receiver for changes made to bluetooth states such as:
-     * 1) Discoverability mode on/off or expire.
+     * Verify changes on bluetooth states such as: Discovering mode On/Off
+     * Used by enableDicvoveringMode()
      */
-    private val mBroadcastReceiver2 = object : BroadcastReceiver() {
+    private val onBTChangeState = object : BroadcastReceiver() {
 
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action
@@ -267,19 +296,19 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
                     //Device is in Discoverable Mode
                     BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE -> Log.d(
                             _tag,
-                            "mBroadcastReceiver2: Discoverability Enabled."
+                            "onBTChangeState: Discoverability Enabled."
                     )
                     //Device not in discoverable mode
                     BluetoothAdapter.SCAN_MODE_CONNECTABLE -> Log.d(
                             _tag,
-                            "mBroadcastReceiver2: Discoverability Disabled. Able to receive connections."
+                            "onBTChangeState: Discoverability Disabled. Able to receive connections."
                     )
                     BluetoothAdapter.SCAN_MODE_NONE -> Log.d(
                             _tag,
-                            "mBroadcastReceiver2: Discoverability Disabled. Not able to receive connections."
+                            "onBTChangeState: Discoverability Disabled. Not able to receive connections."
                     )
-                    BluetoothAdapter.STATE_CONNECTING -> Log.d(_tag, "mBroadcastReceiver2: Connecting....")
-                    BluetoothAdapter.STATE_CONNECTED -> Log.d(_tag, "mBroadcastReceiver2: Connected.")
+                    BluetoothAdapter.STATE_CONNECTING -> Log.d(_tag, "onBTChangeState: Connecting....")
+                    BluetoothAdapter.STATE_CONNECTED -> Log.d(_tag, "onBTChangeState: Connected.")
                 }
 
             }
@@ -289,45 +318,54 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
     /**
      * Broadcast Receiver that detects bond state changes (Pairing status changes)
+     * Check for status pairing
      */
-    private val mBroadcastReceiver4 = object : BroadcastReceiver() {
+    private val pairingStatusChange = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action
 
             if (action == BluetoothDevice.ACTION_BOND_STATE_CHANGED) {
+
+                // Get action
                 val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                //3 cases:
-                //case1: bonded already
+
+                // Connection already exist
                 if (device.bondState == BluetoothDevice.BOND_BONDED) {
                     Log.d(_tag, "BroadcastReceiver: BOND_BONDED.")
-                    //inside BroadcastReceiver4
+                    // Set actual devices
                     selectedBtDevices = device
                 }
-                //case2: creating a bone
+                // Creating new connection
                 if (device.bondState == BluetoothDevice.BOND_BONDING) {
                     Log.d(_tag, "BroadcastReceiver: BOND_BONDING.")
+                    Toast.makeText(applicationContext, "Connecting to devices",
+                            Toast.LENGTH_SHORT).show()
+
                 }
-                //case3: breaking a bond
+                // Connection lost
                 if (device.bondState == BluetoothDevice.BOND_NONE) {
                     Log.d(_tag, "BroadcastReceiver: BOND_NONE.")
+                    Toast.makeText(applicationContext, applicationContext.getString(R.string.msg_bt_connection_lost),
+                            Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
 
-
+    /**
+     * On activity destroy
+     */
     override fun onDestroy() {
         Log.d(_tag, "onDestroy: called.")
         super.onDestroy()
         unregisterReceiver(changeOnAction)
-        unregisterReceiver(mBroadcastReceiver2)
+        unregisterReceiver(onBTChangeState)
         unregisterReceiver(updateListAdapter)
-        unregisterReceiver(mBroadcastReceiver4)
-        //mBluetoothAdapter.cancelDiscovery();
+        unregisterReceiver(pairingStatusChange)
     }
 
 
-//
+//     Enable / Disable bluetooth
 //    fun enableDisableBT() {
 //        if (btAdapter == null) {
 //            Log.d(_tag, "enableDisableBT: Does not have BT capabilities.")
@@ -347,19 +385,6 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 //            val BTIntent = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
 //            registerReceiver(changeOnAction, BTIntent)
 //        }
-//
-//    }
-
-
-//    fun btnEnableDisable_Discoverable(view: View) {
-//        Log.d(_tag, "btnEnableDisable_Discoverable: Making device discoverable for 300 seconds.")
-//
-//        val discoverableIntent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
-//        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
-//        startActivity(discoverableIntent)
-//
-//        val intentFilter = IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED)
-//        registerReceiver(mBroadcastReceiver2, intentFilter)
 //
 //    }
 

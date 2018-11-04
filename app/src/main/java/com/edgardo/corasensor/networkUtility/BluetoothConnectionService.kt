@@ -1,3 +1,8 @@
+/**
+ * This code is based on a existing project of "mitchtabian" and modified to this project necessities
+ * Source code : https://github.com/mitchtabian/Sending-and-Receiving-Data-with-Bluetooth
+ */
+
 package com.edgardo.corasensor.networkUtility
 
 import android.app.ProgressDialog
@@ -15,18 +20,26 @@ import java.nio.charset.Charset
 import java.util.UUID
 
 
-class BluetoothConnectionService(internal var mContext: Context) {
+class BluetoothConnectionService(internal var context: Context) {
 
-    private val mBluetoothAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+    private val btAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
-    private var mInsecureAcceptThread: AcceptThread? = null
+    private var acceptThread: AcceptThread? = null
 
     private var mConnectThread: ConnectThread? = null
-    private var mmDevice: BluetoothDevice? = null
+    private var device: BluetoothDevice? = null
     private var deviceUUID: UUID? = null
-    lateinit var mProgressDialog: ProgressDialog
+    lateinit var progressDialogConnection: ProgressDialog
 
-    private var mConnectedThread: ConnectedThread? = null
+    private var connectedThread: ConnectedThread? = null
+    val _tag = "BTConnServer"
+
+    companion object {
+
+        const val connectionName = "scanApp"
+
+        private val MY_UUID_INSECURE = UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66")
+    }
 
     init {
         start()
@@ -41,55 +54,54 @@ class BluetoothConnectionService(internal var mContext: Context) {
     private inner class AcceptThread : Thread() {
 
         // The local server socket
-        private val mmServerSocket: BluetoothServerSocket?
+        private val serverSocket: BluetoothServerSocket?
 
         init {
-            var tmp: BluetoothServerSocket? = null
+            var btServerSocket: BluetoothServerSocket? = null
 
             // Create a new listening server socket
             try {
-                tmp = mBluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(appName, MY_UUID_INSECURE)
-
-                Log.d(TAG, "AcceptThread: Setting up Server using: $MY_UUID_INSECURE")
+                btServerSocket = btAdapter.listenUsingInsecureRfcommWithServiceRecord(connectionName, MY_UUID_INSECURE)
+                Log.d(_tag, "AcceptThread: Setting up Server using: $MY_UUID_INSECURE")
             } catch (e: IOException) {
-                Log.e(TAG, "AcceptThread: IOException: " + e.message)
+                Log.e(_tag, "AcceptThread: IOException: " + e.message)
             }
 
-            mmServerSocket = tmp
+            serverSocket = btServerSocket
         }
 
         override fun run() {
-            Log.d(TAG, "run: AcceptThread Running.")
+            Log.d(_tag, "run: AcceptThread Running.")
 
             var socket: BluetoothSocket? = null
 
             try {
                 // This is a blocking call and will only return on a
                 // successful connection or an exception
-                Log.d(TAG, "run: RFCOM server socket start.....")
+                Log.d(_tag, "run: RFCOM server socket start.....")
 
-                socket = mmServerSocket!!.accept()
+                socket = serverSocket!!.accept()
 
-                Log.d(TAG, "run: RFCOM server socket accepted connection.")
+                Log.d(_tag, "run: RFCOM server socket accepted connection.")
 
             } catch (e: IOException) {
-                Log.e(TAG, "AcceptThread: IOException: " + e.message)
+                Log.e(_tag, "AcceptThread: IOException: " + e.message)
             }
 
             //talk about this is in the 3rd
             if (socket != null) {
-                connected(socket, mmDevice)
+                connected(socket, device)
             }
 
-            Log.i(TAG, "END mAcceptThread ")
+            Log.i(_tag, "END mAcceptThread ")
         }
 
         fun cancel() {
-            Log.d(TAG, "cancel: Canceling AcceptThread.")
+            Log.d(_tag, "cancel: Canceling AcceptThread.")
             try {
-                mmServerSocket!!.close()
+                serverSocket!!.close()
             } catch (e: IOException) {
-                Log.e(TAG, "cancel: Close of AcceptThread ServerSocket failed. " + e.message)
+                Log.e(_tag, "cancel: Close of AcceptThread ServerSocket failed. " + e.message)
             }
 
         }
@@ -105,28 +117,28 @@ class BluetoothConnectionService(internal var mContext: Context) {
         private var mmSocket: BluetoothSocket? = null
 
         init {
-            Log.d(TAG, "ConnectThread: started.")
-            mmDevice = device
+            Log.d(_tag, "ConnectThread: started.")
+            this@BluetoothConnectionService.device = device
             deviceUUID = uuid
         }
 
         override fun run() {
-            var tmp: BluetoothSocket? = null
-            Log.i(TAG, "RUN mConnectThread ")
+            var btSocket: BluetoothSocket? = null
+            Log.i(_tag, "RUN mConnectThread ")
 
             // Get a BluetoothSocket for a connection with the
             // given BluetoothDevice
             try {
-                Log.d(TAG, "ConnectThread: Trying to create InsecureRfcommSocket using UUID: $MY_UUID_INSECURE")
-                tmp = mmDevice!!.createRfcommSocketToServiceRecord(deviceUUID)
+                Log.d(_tag, "ConnectThread: Trying to create InsecureRfcommSocket using UUID: $MY_UUID_INSECURE")
+                btSocket = device!!.createRfcommSocketToServiceRecord(deviceUUID)
             } catch (e: IOException) {
-                Log.e(TAG, "ConnectThread: Could not create InsecureRfcommSocket " + e.message)
+                Log.e(_tag, "ConnectThread: Could not create InsecureRfcommSocket " + e.message)
             }
 
-            mmSocket = tmp
+            mmSocket = btSocket
 
             // Always cancel discovery because it will slow down a connection
-            mBluetoothAdapter.cancelDiscovery()
+            btAdapter.cancelDiscovery()
 
             // Make a connection to the BluetoothSocket
 
@@ -135,33 +147,33 @@ class BluetoothConnectionService(internal var mContext: Context) {
                 // successful connection or an exception
                 mmSocket!!.connect()
 
-                Log.d(TAG, "run: ConnectThread connected.")
+                Log.d(_tag, "run: ConnectThread connected.")
             } catch (e: IOException) {
                 // Close the socket
                 try {
                     mmSocket!!.close()
-                    Log.d(TAG, "run: Closed Socket.")
+                    Log.d(_tag, "run: Closed Socket.")
                 } catch (e1: IOException) {
-                    Log.e(TAG, "mConnectThread: run: Unable to close connection in socket " + e1.message)
+                    Log.e(_tag, "mConnectThread: run: Unable to close connection in socket " + e1.message)
                 }
 
-                Log.d(TAG, "run: ConnectThread: Could not connect to UUID: $MY_UUID_INSECURE")
+                Log.d(_tag, "run: ConnectThread: Could not connect to UUID: $MY_UUID_INSECURE")
             }
 
             val mmSocket = mmSocket
 
             //will talk about this in the 3rd video
             if (mmSocket != null) {
-                connected(mmSocket, mmDevice)
+                connected(mmSocket, device)
             }
         }
 
         fun cancel() {
             try {
-                Log.d(TAG, "cancel: Closing Client Socket.")
+                Log.d(_tag, "cancel: Closing Client Socket.")
                 mmSocket!!.close()
             } catch (e: IOException) {
-                Log.e(TAG, "cancel: close() of mmSocket in Connectthread failed. " + e.message)
+                Log.e(_tag, "cancel: close() of mmSocket in Connectthread failed. " + e.message)
             }
 
         }
@@ -174,16 +186,16 @@ class BluetoothConnectionService(internal var mContext: Context) {
      */
     @Synchronized
     fun start() {
-        Log.d(TAG, "start")
+        Log.d(_tag, "start")
 
         // Cancel any thread attempting to make a connection
         if (mConnectThread != null) {
             mConnectThread!!.cancel()
             mConnectThread = null
         }
-        if (mInsecureAcceptThread == null) {
-            mInsecureAcceptThread = AcceptThread()
-            mInsecureAcceptThread!!.start()
+        if (acceptThread == null) {
+            acceptThread = AcceptThread()
+            acceptThread!!.start()
         }
     }
 
@@ -194,10 +206,10 @@ class BluetoothConnectionService(internal var mContext: Context) {
      */
 
     fun startClient(device: BluetoothDevice, uuid: UUID) {
-        Log.d(TAG, "startClient: Started.")
+        Log.d(_tag, "startClient: Started.")
 
-        //initprogress dialog
-        mProgressDialog = ProgressDialog.show(mContext, "Connecting Bluetooth", "Please Wait...", true)
+        // Progress for connection
+        progressDialogConnection = ProgressDialog.show(context, "Connecting Bluetooth", "Please Wait...", true)
 
         mConnectThread = ConnectThread(device, uuid)
         mConnectThread!!.start()
@@ -207,32 +219,32 @@ class BluetoothConnectionService(internal var mContext: Context) {
      * Finally the ConnectedThread which is responsible for maintaining the BTConnection, Sending the data, and
      * receiving incoming data through input/output streams respectively.
      */
-    private inner class ConnectedThread(private val mmSocket: BluetoothSocket) : Thread() {
-        private val mmInStream: InputStream?
-        private val mmOutStream: OutputStream?
+    private inner class ConnectedThread(private val socket: BluetoothSocket) : Thread() {
+        private val inStream: InputStream?
+        private val outStream: OutputStream?
 
         init {
-            Log.d(TAG, "ConnectedThread: Starting.")
+            Log.d(_tag, "ConnectedThread: Starting.")
             var tmpIn: InputStream? = null
             var tmpOut: OutputStream? = null
 
             //dismiss the progressdialog when connection is established
             try {
-                mProgressDialog.dismiss()
+                progressDialogConnection.dismiss()
             } catch (e: NullPointerException) {
                 e.printStackTrace()
             }
 
 
             try {
-                tmpIn = mmSocket.inputStream
-                tmpOut = mmSocket.outputStream
+                tmpIn = socket.inputStream
+                tmpOut = socket.outputStream
             } catch (e: IOException) {
                 e.printStackTrace()
             }
 
-            mmInStream = tmpIn
-            mmOutStream = tmpOut
+            inStream = tmpIn
+            outStream = tmpOut
         }
 
         override fun run() {
@@ -244,33 +256,33 @@ class BluetoothConnectionService(internal var mContext: Context) {
             while (true) {
                 // Read from the InputStream
                 try {
-                    bytes = mmInStream!!.read(buffer)
+                    bytes = inStream!!.read(buffer)
                     val incomingMessage = String(buffer, 0, bytes)
-                    Log.d(TAG, "InputStream: $incomingMessage")
+                    Log.d(_tag, "InputStream: $incomingMessage")
                 } catch (e: IOException) {
-                    Log.e(TAG, "write: Error reading Input Stream. " + e.message)
+                    Log.e(_tag, "write: Error reading Input Stream. " + e.message)
                     break
                 }
 
             }
         }
 
-        //Call this from the main activity to send data to the remote device
+        // Send data to other devices
         fun write(bytes: ByteArray) {
             val text = String(bytes, Charset.defaultCharset())
-            Log.d(TAG, "write: Writing to outputstream: $text")
+            Log.d(_tag, "write: Writing to outputstream: $text")
             try {
-                mmOutStream!!.write(bytes)
+                outStream!!.write(bytes)
             } catch (e: IOException) {
-                Log.e(TAG, "write: Error writing to output stream. " + e.message)
+                Log.e(_tag, "write: Error writing to output stream. " + e.message)
             }
 
         }
 
-        /* Call this from the main activity to shutdown the connection */
+        // Shutdown the connection
         fun cancel() {
             try {
-                mmSocket.close()
+                socket.close()
             } catch (e: IOException) {
             }
 
@@ -278,11 +290,11 @@ class BluetoothConnectionService(internal var mContext: Context) {
     }
 
     private fun connected(mmSocket: BluetoothSocket, mmDevice: BluetoothDevice?) {
-        Log.d(TAG, "connected: Starting.")
+        Log.d(_tag, "connected: Starting.")
 
         // Start the thread to manage the connection and perform transmissions
-        mConnectedThread = ConnectedThread(mmSocket)
-        mConnectedThread!!.start()
+        connectedThread = ConnectedThread(mmSocket)
+        connectedThread!!.start()
     }
 
     /**
@@ -296,18 +308,15 @@ class BluetoothConnectionService(internal var mContext: Context) {
         val r: ConnectedThread
 
         // Synchronize a copy of the ConnectedThread
-        Log.d(TAG, "write: Write Called.")
+        Log.d(_tag, "write: Write Called.")
         //perform the write
-        mConnectedThread!!.write(out)
+        connectedThread!!.write(out)
+    }
+    fun read(){
+
     }
 
-    companion object {
-        private val TAG = "BluetoothConnectionServ"
 
-        private val appName = "MYAPP"
-
-        private val MY_UUID_INSECURE = UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66")
-    }
 
 }
 
