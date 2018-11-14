@@ -1,5 +1,6 @@
 package com.edgardo.corasensor.activities
 
+import android.arch.lifecycle.Observer
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
@@ -22,6 +23,26 @@ class ScanListActivity : AppCompatActivity() {
 
         val layoutManager = LinearLayoutManager(this)
         recycler_view_list_scans.layoutManager = layoutManager
+
+
+        ioThread {
+            val scanNum = instanceDatabase.scanDao().getAnyScan()
+            if (scanNum == 0) {
+                insertScans()
+            } else {
+                loadAllScans()
+            }
+        }
+
+
+    }
+    // Start -> set initial data
+    private fun insertScans() {
+        val scan_list: List<Scan> = ScanDataTest(applicationContext).scanList
+        ioThread {
+            instanceDatabase.scanDao().insertScanList(scan_list)
+            loadAllScans()
+        }
     }
 
 }

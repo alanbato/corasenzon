@@ -10,6 +10,7 @@ import com.edgardo.corasensor.helpers.Converters
 
 @Entity(tableName = "ScanData")
 @TypeConverters(Converters::class)
+
 data class ScanData(@ColumnInfo(name = "Time") var time: Double?,
                 @ColumnInfo(name = "Pulse") var pulse: Double?,
                 @ColumnInfo(name = "Pressure") var pressure: Double?,

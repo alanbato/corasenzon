@@ -1,5 +1,6 @@
 package com.edgardo.corasensor.activities
 
+import android.arch.lifecycle.Observer
 import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
@@ -11,47 +12,67 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import com.edgardo.corasensor.R
+import com.edgardo.corasensor.Scan.Scan
+import com.edgardo.corasensor.database.ScanDataTest
+import com.edgardo.corasensor.database.ScanDatabase
+import com.edgardo.corasensor.fragments.scanListFragment
+import com.edgardo.corasensor.fragments.startScanFragment
+import com.edgardo.corasensor.networkUtility.Executor.Companion.ioThread
+import com.edgardo.corasensor.scanData.ScanData
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.content_main.*
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+    lateinit var instanceDatabase: ScanDatabase
+    companion object {
+        const val SCAN_KEY : String = "SCAN_KEY"
+    }
+
+    val scanListFragment = scanListFragment()
+    val startScan = startScanFragment.newInstance("Uno", "DOS")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+        instanceDatabase = ScanDatabase.getInstance(this)
 
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
+//        ioThread {
+//            val cant = instanceDatabase.scanDao().getAnyScan()
+//            if(cant == 0 ){
+//                insertScans()
+//            }else{
+//                loadScans()
+//            }
+//        }
 
 
+        with(supportFragmentManager.beginTransaction()) {
+            add(R.id.fragment_list_scan, startScan)
+            commit()
+        }
 
-        //<editor-fold desc="Navigation bar">
         val toggle = ActionBarDrawerToggle(
                 this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
         drawer_layout.addDrawerListener(toggle)
         toggle.syncState()
 
         nav_view.setNavigationItemSelectedListener(this)
-        //</editor-fold>
-
-        //<editor-fold desc="Buttons click listener">
-        button_start.setOnClickListener{ onClick(it)}
-        //</editor-fold>
-
 
     }
 
     private fun onClick(v: View){
 
         when(v.id){
-            R.id.button_start -> {
-                val intent = Intent(this, ScanActivity::class.java)
-                startActivity(intent)
-            }
+            //R.id.button_start -> {
+              //  val intent = Intent(this, ScanActivity::class.java)
+                //startActivity(intent)
+            //}
         }
     }
 
@@ -83,9 +104,35 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Handle navigation view item clicks here.
         when (item.itemId) {
             R.id.nav_home -> {
+                with(supportFragmentManager.beginTransaction()) {
+                    replace(R.id.fragment_list_scan, startScan)
+                    commit()
+                }
 
             }
             R.id.nav_history -> {
+                with(supportFragmentManager.beginTransaction()) {
+                    replace(R.id.fragment_list_scan, scanListFragment)
+                    commit()
+                }
+
+                ioThread {
+                    val cant = instanceDatabase.scanDao().getAnyScan()
+                    if(cant == 0 ){
+                      insertScans()
+                    }else{
+                     loadScans()
+                    }
+                    runOnUiThread {
+                        supportActionBar!!.title = "Scans"
+                        val scan = instanceDatabase.scanDao().loadAllScan()
+                        scan.observe(this, Observer<List<Scan>> { scans ->
+                            scanListFragment.scans = scans ?: emptyList()
+                            scanListFragment.onScanClick = ::scanClickShow
+                        })
+                        scanListFragment.scanAdapter?.notifyDataSetChanged()
+                    }
+                }
 
             }
             R.id.nav_settings -> {
@@ -97,5 +144,28 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         drawer_layout.closeDrawer(GravityCompat.START)
         return true
+    }
+
+    private fun loadScans(){
+        ioThread {
+            val scan = instanceDatabase.scanDao().loadAllScan()
+            scan.observe(this, Observer<List<Scan>> { scans ->
+                scanListFragment.scans = scans ?: emptyList()
+                scanListFragment.onScanClick = ::scanClickShow
+            })
+        }
+    }
+
+    fun scanClickShow(scan: Scan) {
+        val intent = Intent(this, DetailActivity::class.java)
+        intent.putExtra(SCAN_KEY, scan)
+        startActivity(intent)
+    }
+    fun insertScans(){
+        val scans:List<Scan> = ScanDataTest(applicationContext).scanList
+        ioThread {
+            instanceDatabase.scanDao().insertScanList(scans)
+            loadScans()
+        }
     }
 }

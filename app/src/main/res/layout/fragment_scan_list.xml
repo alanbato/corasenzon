@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <!-- TODO: Update blank fragment layout -->
+    <android.support.v7.widget.RecyclerView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/recycler_view_scan"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingLeft="5dp"
+        android:paddingTop="15dp"
+        android:paddingRight="5dp"
+        android:paddingBottom="5dp"/>
