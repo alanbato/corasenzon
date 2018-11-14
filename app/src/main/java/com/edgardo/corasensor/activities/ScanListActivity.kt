@@ -36,12 +36,22 @@ class ScanListActivity : AppCompatActivity() {
 
 
     }
+
     // Start -> set initial data
     private fun insertScans() {
         val scan_list: List<Scan> = ScanDataTest(applicationContext).scanList
         ioThread {
             instanceDatabase.scanDao().insertScanList(scan_list)
             loadAllScans()
+        }
+    }
+
+    private fun loadAllScans() {
+        ioThread {
+            val scan = instanceDatabase.scanDao().loadAllScan()
+            scan.observe(this, Observer<List<Scan>> { scans ->
+
+            })
         }
     }
 
