@@ -2,12 +2,11 @@ package com.edgardo.corasensor.activities
 
 import android.Manifest
 import android.app.AlertDialog
+import android.app.Application
+import android.app.Dialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
@@ -16,6 +15,8 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import android.widget.AdapterView
+import android.widget.EditText
+import android.widget.ListView
 import android.widget.Toast
 import com.edgardo.corasensor.R
 import com.edgardo.corasensor.networkUtility.BluetoothConnectionService
@@ -40,12 +41,10 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
     // Bluetooth connection
     lateinit var btConnection: BluetoothConnectionService
 
-    val sb = StringBuilder()
 
 
     companion object {
         const val BLUETOOTH_REQUEST_PERMISSION = 1001
-        const val RECIEVE_MESSAGE = 1
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -151,7 +150,7 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
         // Check for permissions on manifest
         checkBTPermissions()
-        enableDicvoveringMode()
+//        enableDicvoveringMode()
 
         if (btAdapter!!.isDiscovering) {
             btAdapter!!.cancelDiscovery()
@@ -166,7 +165,8 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
             btAdapter!!.startDiscovery()
             val discoverDevicesIntent = IntentFilter(BluetoothDevice.ACTION_FOUND)
-//            Log.d(_tag, "Discovering: flag 3.")
+
+            registerReceiver(onBTChangeState, discoverDevicesIntent)
             registerReceiver(updateListAdapter, discoverDevicesIntent)
 
         }
@@ -313,7 +313,11 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
                     BluetoothAdapter.STATE_CONNECTED -> Log.d(_tag, "onBTChangeState: Connected.")
                 }
 
-            }
+            }else if (action == BluetoothAdapter.ACTION_DISCOVERY_FINISHED) {
+                Toast.makeText(applicationContext, "Finish discovery",
+                        Toast.LENGTH_SHORT).show()
+
+                }
         }
     }
 
@@ -352,6 +356,23 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
                 }
             }
         }
+    }
+
+    private fun setAlertDialogList(){
+
+
+        val alert: AlertDialog.Builder = AlertDialog.Builder(this)
+
+        alert.setTitle("Devices")
+
+        val list = ListView(this)
+        list.adapter = DevicesBTListAdapter(this, R.layout.row_devices_bt, btDevices)
+        list.onItemClickListener = this
+
+        alert.setView(list)
+        alert.show()
+
+
     }
 
 
