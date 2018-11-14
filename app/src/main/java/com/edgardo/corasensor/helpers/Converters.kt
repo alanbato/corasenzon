@@ -1,10 +1,9 @@
-package com.edgardo.corasensor
+package com.edgardo.corasensor.helpers
 
 import android.arch.persistence.room.TypeConverter
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import java.io.ByteArrayOutputStream
-import java.sql.Blob
 import java.text.SimpleDateFormat
 import java.util.*
 

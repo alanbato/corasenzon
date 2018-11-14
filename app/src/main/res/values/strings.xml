@@ -1,9 +1,36 @@
 <resources>
-    <string name="app_name">corasensor</string>
+    <string name="app_name">Scanner</string>
+
+    <!--Navigation Menu-->
+    <string name="nav_header_title">Menu</string>
+    <string name="nav_header_settings">Settings</string>
+
+    <string name="nav_body_home">Home</string>
+    <string name="nav_body_history">History</string>
+    <string name="nav_body_settings">App Settings</string>
+
+
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Android Studio</string>
-    <string name="nav_header_subtitle">android.studio@android.com</string>
-    <string name="nav_header_desc">Navigation header</string>
+
+
+    <!--Main-->
+    <string name="button_start">START!</string>
+
+    <!--Scan-->
+    <string name="button_scan_cancel">Cancel</string>
+    <string name="button_scan_finish">Finish</string>
+
+    <!--Detail view-->
+    <string name="label_detail_pressure_systolic">Systolic</string>
+    <string name="label_detail_pressure_systolic_manual">SystolicM</string>
+
+
+    <string name="label_detail_pressure_diastolic">Diastolic</string>
+    <string name="label_detail_pressure_diastolic_manual">DiastolicM</string>
+
     <string name="action_settings">Settings</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
