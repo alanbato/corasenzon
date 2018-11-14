@@ -2,8 +2,6 @@ package com.edgardo.corasensor.activities
 
 import android.Manifest
 import android.app.AlertDialog
-import android.app.Application
-import android.app.Dialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.*
@@ -14,14 +12,20 @@ import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
-import android.widget.AdapterView
-import android.widget.EditText
-import android.widget.ListView
-import android.widget.Toast
+import android.widget.*
 import com.edgardo.corasensor.R
+import com.edgardo.corasensor.database.ScanDatabase
 import com.edgardo.corasensor.networkUtility.BluetoothConnectionService
+import com.edgardo.corasensor.networkUtility.Executor.Companion.ioThread
+import com.edgardo.corasensor.scanData.ScanData
+import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.android.synthetic.main.activity_settings.*
+import java.lang.Exception
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
 class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
@@ -32,7 +36,6 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
     // Selected devices
     lateinit var selectedBtDevices: BluetoothDevice
     // Communication UUID
-//    private val uuidConnection = UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66")
     private val uuidConnection = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     // List adapter
 //    lateinit var devicesBTListAdapter: DevicesBTListAdapter
@@ -40,7 +43,9 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
     var btAdapter: BluetoothAdapter? = null
     // Bluetooth connection
     lateinit var btConnection: BluetoothConnectionService
+    lateinit var instanceDatabase: ScanDatabase
 
+    val formatter = SimpleDateFormat("HH:mm:ss.SSSXXX")
 
 
     companion object {
@@ -50,6 +55,8 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
+        instanceDatabase = ScanDatabase.getInstance(this)
+
 
         supportActionBar!!.title = applicationContext.getString(R.string.action_settings)
 
@@ -150,7 +157,7 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
         // Check for permissions on manifest
         checkBTPermissions()
-//        enableDicvoveringMode()
+        enableDicvoveringMode()
 
         if (btAdapter!!.isDiscovering) {
             btAdapter!!.cancelDiscovery()
@@ -185,10 +192,13 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
             if (action == BluetoothDevice.ACTION_FOUND) {
                 val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                btDevices.add(device)
-                Log.d(_tag, "onReceive: " + device.name + ": " + device.address)
-                val devicesBTListAdapter = DevicesBTListAdapter(context, R.layout.row_devices_bt, btDevices)
-                list_new_devices.adapter = devicesBTListAdapter
+                if (device.name != null) {
+                    btDevices.add(device)
+                    Log.d(_tag, "onReceive: " + device.name + ": " + device.address)
+                    val devicesBTListAdapter = DevicesBTListAdapter(context, R.layout.row_devices_bt, btDevices)
+                    list_new_devices.adapter = devicesBTListAdapter
+                }
+
             }
         }
     }
@@ -244,13 +254,6 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
     }
 
-    /**
-     * Start the connection with the device
-     * Has to be paired first
-     */
-    private fun startConnection() {
-//        startBTConnection(selectedBtDevices, uuidConnection)
-    }
 
     /**
      * starting listening service method
@@ -259,6 +262,27 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
         Log.d(_tag, "startBTConnection: Initializing RFCOM Bluetooth Connection.")
 
         btConnection.startClient(device, uuid)
+                .debounce(300, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    try {
+                        val parData = it.split(";")
+                        response_data.append("${parData[0]} - ${parData[1]} - ${parData[2]} \n")
+
+                        val current = formatter.format(Date().time)
+                        Log.d(_tag, current)
+
+                        val scanData = ScanData(current, parData[0].toDouble(), parData[1].toDouble(), 1)
+                        ioThread {
+                            Log.d(_tag, "Create")
+                            instanceDatabase.scanDataDao().insertScanData(scanData)
+                        }
+                    } catch (e: Exception) {
+                        response_data.append("Error ${it} \n")
+                        Log.d(_tag, "Data is no in correct format")
+                    }
+
+                }
     }
 
     /**
@@ -313,11 +337,11 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
                     BluetoothAdapter.STATE_CONNECTED -> Log.d(_tag, "onBTChangeState: Connected.")
                 }
 
-            }else if (action == BluetoothAdapter.ACTION_DISCOVERY_FINISHED) {
+            } else if (action == BluetoothAdapter.ACTION_DISCOVERY_FINISHED) {
                 Toast.makeText(applicationContext, "Finish discovery",
                         Toast.LENGTH_SHORT).show()
 
-                }
+            }
         }
     }
 
@@ -358,7 +382,7 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
         }
     }
 
-    private fun setAlertDialogList(){
+    private fun setAlertDialogList() {
 
 
         val alert: AlertDialog.Builder = AlertDialog.Builder(this)
@@ -375,16 +399,14 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
     }
 
-
-
-//    handlerMsg = object : Handler()
-//    override fun onStop() {
-//        super.onStop()
-//        unregisterReceiver(updateListAdapter)
-//        unregisterReceiver(pairingStatusChange)
-//        unregisterReceiver(onBTChangeState)
-//        unregisterReceiver(changeOnAction)
-//    }
+    override fun onDestroy() {
+        Log.d(_tag, "onDestroy: called.")
+        super.onDestroy()
+        unregisterReceiver(changeOnAction)
+        unregisterReceiver(pairingStatusChange)
+        unregisterReceiver(updateListAdapter)
+        unregisterReceiver(onBTChangeState)
+    }
 
 
 //     Enable / Disable bluetooth

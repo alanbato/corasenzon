@@ -16,9 +16,12 @@ import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
 import com.edgardo.corasensor.R
+import io.reactivex.Observable
+import io.reactivex.ObservableEmitter
 import java.io.IOException
 import java.io.InputStream
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 class BluetoothConnectionService(internal var context: Context) {
@@ -32,13 +35,15 @@ class BluetoothConnectionService(internal var context: Context) {
     lateinit var progressDialogConnection: ProgressDialog
 
     private var connectedThread: ConnectedThread? = null
+
+    private var emmitter : ObservableEmitter<String>? = null
     val _tag = "BTConnServer"
 
     companion object {
 
         const val connectionName = "scanApp"
 
-        private val MY_UUID_INSECURE = UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66")
+        private val uuidConnection = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     }
 
     init {
@@ -56,9 +61,9 @@ class BluetoothConnectionService(internal var context: Context) {
 
         init {
             try {
-                serverSocket = btAdapter.listenUsingInsecureRfcommWithServiceRecord(connectionName, MY_UUID_INSECURE)
+                serverSocket = btAdapter.listenUsingInsecureRfcommWithServiceRecord(connectionName, uuidConnection)
 //                serverSocket = btAdapter.listenUsingRfcommWithServiceRecord(connectionName, MY_UUID_INSECURE)
-                Log.d(_tag, "AcceptThread: Setting up Server using: $MY_UUID_INSECURE")
+                Log.d(_tag, "AcceptThread: Setting up Server using: $uuidConnection")
             } catch (e: IOException) {
                 Log.e(_tag, "AcceptThread: IOException: " + e.message)
             }
@@ -182,7 +187,7 @@ class BluetoothConnectionService(internal var context: Context) {
     }
 
 
-    fun startClient(device: BluetoothDevice, uuid: UUID) {
+    fun startClient(device: BluetoothDevice, uuid: UUID) : Observable<String> {
         Log.d(_tag, "startClient: Started.")
 
         // Progress for connection
@@ -190,6 +195,10 @@ class BluetoothConnectionService(internal var context: Context) {
 
         connectThread = ConnectThread(device, uuid)
         connectThread!!.start()
+
+        return Observable.create {
+            emmitter = it
+        }
     }
 
     /**
@@ -234,14 +243,15 @@ class BluetoothConnectionService(internal var context: Context) {
                     bytes = inStream!!.read(buffer)
                     // parse data
                     val incomingMessage = String(buffer, 0, bytes)
+//                    Log.e(_tag, "OUPUT---: $incomingMessage")
 
-                    val v1 = incomingMessage.split(";")
-//                    Log.d(_tag, "InputStream: ${v1[0]} ${v1[1]}")
+                    emmitter?.onNext(incomingMessage)
 
-                    // Print data on text view
-                    (context as Activity).runOnUiThread {
-                        (context as Activity).findViewById<TextView>(R.id.response_data).append(incomingMessage)
-                    }
+                    //val parseData = incomingMessage.split(";")
+
+                    //val info = "${parseData[0]} - ${parseData[1]} - ${parseData[2]} \n"
+
+
 
                 } catch (e: IOException) {
                     Log.e(_tag, "write: Error reading Input Stream. " + e.message)
