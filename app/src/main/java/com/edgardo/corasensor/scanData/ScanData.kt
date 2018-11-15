@@ -11,7 +11,7 @@ import com.edgardo.corasensor.helpers.Converters
 @Entity(tableName = "ScanData")
 @TypeConverters(Converters::class)
 
-data class ScanData(@ColumnInfo(name = "Time") var time: String?,
+data class ScanData(@ColumnInfo(name = "Time") var time: Double?,
                     @ColumnInfo(name = "Pulse") var pulse: Double?,
                     @ColumnInfo(name = "Pressure") var pressure: Double?,
                     @ColumnInfo(name = "fk_scan") var fk_sacan: Int?
@@ -21,7 +21,7 @@ data class ScanData(@ColumnInfo(name = "Time") var time: String?,
     var _id: Int = 0
 
     constructor(parcel: Parcel) : this(
-            parcel.readValue(String::class.java.classLoader) as? String,
+            parcel.readValue(Double::class.java.classLoader) as? Double,
             parcel.readValue(Double::class.java.classLoader) as? Double,
             parcel.readValue(Double::class.java.classLoader) as? Double,
             parcel.readValue(Int::class.java.classLoader) as? Int) {

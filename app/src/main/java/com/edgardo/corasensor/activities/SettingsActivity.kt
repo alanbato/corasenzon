@@ -267,12 +267,11 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
                 .subscribe {
                     try {
                         val parData = it.split(";")
+                        // ms Time; mmHG; pulso
                         response_data.append("${parData[0]} - ${parData[1]} - ${parData[2]} \n")
+                        val currentTime = parData[0].toDouble()
 
-                        val current = formatter.format(Date().time)
-                        Log.d(_tag, current)
-
-                        val scanData = ScanData(current, parData[0].toDouble(), parData[1].toDouble(), 1)
+                        val scanData = ScanData(currentTime, parData[2].toDouble(), parData[1].toDouble(), 1)
                         ioThread {
                             Log.d(_tag, "Create")
                             instanceDatabase.scanDataDao().insertScanData(scanData)
