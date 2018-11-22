@@ -48,8 +48,8 @@ class ScanAdapter(val scans: List<Scan>, val listener: CustomItemClickListener) 
             itemView.text_id.text = scan._id.toString()
             itemView.text_date.text = scan.scanDate
             itemView.text_pressure.text = "${scan.pressureSystolic} / ${scan.pressureDiastolic} "
-
-
+            itemView.text_systolic.text = "${scan.pressureSystolic}"
+            itemView.text_distolic.text = "${scan.pressureDiastolic}"
         }
 
         override fun onClick(p0: View?) {
