@@ -5,7 +5,7 @@
     <string name="nav_header_title">Menu</string>
     <string name="nav_header_settings">Settings</string>
 
-    <string name="nav_body_home">Home</string>
+    <string name="nav_body_home">Start Scan</string>
     <string name="nav_body_history">History</string>
     <string name="nav_body_settings">App Settings</string>
 
@@ -23,12 +23,14 @@
 
     <!--Detail view-->
     <string name="label_detail_pressure_systolic">Systolic</string>
-    <string name="label_detail_pressure_systolic_manual">SystolicM</string>
+    <string name="label_detail_pressure_systolic_manual">Systolic Manual</string>
 
 
     <string name="label_detail_pressure_diastolic">Diastolic</string>
-    <string name="label_detail_pressure_diastolic_manual">DiastolicM</string>
-
+    <string name="label_identifier">Identifier</string>
+    <string name="label_detail_pressure_diastolic_manual">Diastolic Manual</string>
+    <string name="label_detail_pressure_avg_manual">Avg Pressure Manual</string>
+    <string name="label_detail_pressure_avg">Avg Pressure</string>
     <string name="button_detail_save">Save</string>
 
 
