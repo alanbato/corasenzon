@@ -8,9 +8,11 @@ import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import com.edgardo.corasensor.HeartAssistantApplication
 import com.edgardo.corasensor.R
 import com.edgardo.corasensor.Scan.Scan
 import com.edgardo.corasensor.database.ScanDataTest
@@ -18,15 +20,17 @@ import com.edgardo.corasensor.database.ScanDatabase
 import com.edgardo.corasensor.fragments.scanListFragment
 import com.edgardo.corasensor.fragments.startScanFragment
 import com.edgardo.corasensor.networkUtility.Executor.Companion.ioThread
-import com.edgardo.corasensor.scanData.ScanData
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
-import kotlinx.android.synthetic.main.content_main.*
+import kotlinx.android.synthetic.main.fragment_start_scan.*
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+    val _tag = "MainApp"
+
     lateinit var instanceDatabase: ScanDatabase
+
     companion object {
-        const val SCAN_KEY : String = "SCAN_KEY"
+        const val SCAN_KEY: String = "SCAN_KEY"
     }
 
     val scanListFragment = scanListFragment()
@@ -34,6 +38,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val application = application
+        if (application is HeartAssistantApplication) {
+            application.scan?.subscribe {
+                Log.d(_tag, it)
+            }
+        }
+
+
+
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
         instanceDatabase = ScanDatabase.getInstance(this)
@@ -64,15 +78,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         nav_view.setNavigationItemSelectedListener(this)
 
+
     }
 
-    private fun onClick(v: View){
+    private fun onClick(v: View) {
 
-        when(v.id){
-            //R.id.button_start -> {
-              //  val intent = Intent(this, ScanActivity::class.java)
-                //startActivity(intent)
-            //}
+        when (v.id) {
+            R.id.button_start -> {
+
+            }
         }
     }
 
@@ -118,10 +132,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                 ioThread {
                     val cant = instanceDatabase.scanDao().getAnyScan()
-                    if(cant == 0 ){
-                      insertScans()
-                    }else{
-                     loadScans()
+                    if (cant == 0) {
+                        insertScans()
+                    } else {
+                        loadScans()
                     }
                     runOnUiThread {
                         supportActionBar!!.title = "Scans"
@@ -146,7 +160,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return true
     }
 
-    private fun loadScans(){
+    private fun loadScans() {
         ioThread {
             val scan = instanceDatabase.scanDao().loadAllScan()
             scan.observe(this, Observer<List<Scan>> { scans ->
@@ -161,8 +175,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         intent.putExtra(SCAN_KEY, scan)
         startActivity(intent)
     }
-    fun insertScans(){
-        val scans:List<Scan> = ScanDataTest(applicationContext).scanList
+
+    fun insertScans() {
+        val scans: List<Scan> = ScanDataTest(applicationContext).scanList
         ioThread {
             instanceDatabase.scanDao().insertScanList(scans)
             loadScans()

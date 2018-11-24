@@ -26,11 +26,11 @@ class DevicesBTListAdapter(
 
         val device = devices[position]
 
-        if (device != null) {
-            convertView.device_name.text = device.name
-            convertView.device_addr.text = device.address
 
-        }
+        convertView.device_name.text = device.name
+        convertView.device_addr.text = device.address
+
+
 
         return convertView
     }
