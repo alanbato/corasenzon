@@ -15,8 +15,14 @@ class ScanActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_scan)
 
-        button_cancel.setOnClickListener { onClick(it) }
+        button_cancel.setOnClickListener {
+            finish()
+        }
         button_finish.setOnClickListener { onClick(it) }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        finish()
     }
 
     private fun onClick(v: View) {
@@ -26,7 +32,7 @@ class ScanActivity : AppCompatActivity() {
             }
             R.id.button_finish -> {
                 val intent = Intent(this, DetailActivity::class.java)
-                startActivity(intent)
+                startActivityForResult(intent,1)
             }
         }
     }

@@ -48,4 +48,6 @@
 
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
+    <string name="dont_save">The scan wasn\'t saved.</string>
+    <string name="save">The scan was saved.</string>
 </resources>
