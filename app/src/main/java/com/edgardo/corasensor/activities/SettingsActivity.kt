@@ -30,17 +30,17 @@ import kotlin.collections.ArrayList
 
 class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
-    val _tag = "myTag"
+    val _tag = "SettingAct"
     // List of bluetooth devices
     var btDevices = ArrayList<BluetoothDevice>()
     // Selected devices
     lateinit var selectedBtDevices: BluetoothDevice
     // Communication UUID
     private val uuidConnection = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-    // List adapter
-//    lateinit var devicesBTListAdapter: DevicesBTListAdapter
+
     // Bluetooth adapter
     var btAdapter: BluetoothAdapter? = null
+
     // Bluetooth connection
     lateinit var btConnection: BluetoothConnectionService
     lateinit var instanceDatabase: ScanDatabase
@@ -271,11 +271,11 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
                         response_data.append("${parData[0]} - ${parData[1]} - ${parData[2]} \n")
                         val currentTime = parData[0].toDouble()
 
-                        val scanData = ScanData(currentTime, parData[2].toDouble(), parData[1].toDouble(), 1)
-                        ioThread {
-                            Log.d(_tag, "Create")
-                            instanceDatabase.scanDataDao().insertScanData(scanData)
-                        }
+                        //val scanData = ScanData(currentTime, parData[2].toDouble(), parData[1].toDouble(), 1)
+//                        ioThread {
+//                            Log.d(_tag, "Create")
+//                            instanceDatabase.scanDataDao().insertScanData(scanData)
+//                        }
                     } catch (e: Exception) {
                         response_data.append("Error ${it} \n")
                         Log.d(_tag, "Data is no in correct format")
@@ -401,10 +401,15 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
     override fun onDestroy() {
         Log.d(_tag, "onDestroy: called.")
         super.onDestroy()
-        unregisterReceiver(changeOnAction)
-        unregisterReceiver(pairingStatusChange)
-        unregisterReceiver(updateListAdapter)
-        unregisterReceiver(onBTChangeState)
+        try {
+            unregisterReceiver(changeOnAction)
+            unregisterReceiver(pairingStatusChange)
+            unregisterReceiver(updateListAdapter)
+            unregisterReceiver(onBTChangeState)
+        }catch (e : Exception){
+
+        }
+
     }
 
 
