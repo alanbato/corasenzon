@@ -3,31 +3,26 @@ package com.edgardo.corasensor.networkUtility
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
-import android.app.Dialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.util.Log
 import android.widget.Toast
 import com.edgardo.corasensor.R
-import com.edgardo.corasensor.activities.DevicesBTListAdapter
 import com.edgardo.corasensor.activities.MainActivity
-import io.reactivex.Observable
 import java.util.*
-import android.app.ProgressDialog
-import android.content.*
-import android.view.View
-import android.widget.AdapterView
-import android.widget.ListView
-import java.lang.Exception
 
 
 class BluetoothConnection(internal var context: Context) {
 
 
-    val _tag = "BT Connection"
+    val _tag = "BT_Connection"
 
     // Bluetooth adapter
     var btAdapter: BluetoothAdapter? = null
@@ -105,7 +100,6 @@ class BluetoothConnection(internal var context: Context) {
             return null
         }
 
-
     }
 
 
@@ -169,7 +163,7 @@ class BluetoothConnection(internal var context: Context) {
     /**
      * Start looking fot devices
      */
-    fun discover()  {
+    fun discover() {
         Log.d(_tag, "Discovering: Looking for unpaired devices.")
         Toast
                 .makeText(context, context.getString(R.string.msg_bt_searching),

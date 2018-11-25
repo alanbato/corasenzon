@@ -59,8 +59,11 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
             } else {
                 default_devices.text = "No divice set"
             }
+        }
+        if (application is HeartAssistantApplication) {
             application.scan?.subscribe {
                 response_data.append(it)
+                Log.d(_tag, "READ ->" + it)
             }
         }
 
@@ -235,6 +238,7 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
                 putString(HeartAssistantApplication.BT_DEV_UUID, uuidConnection.toString())
                 apply()
             }
+            default_devices.text = selectedBtDevices.name
             //selectedBtDevices.uuids.toString()
 
             val application = application

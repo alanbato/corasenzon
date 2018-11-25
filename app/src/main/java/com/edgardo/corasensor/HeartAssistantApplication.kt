@@ -17,6 +17,7 @@ class HeartAssistantApplication : Application() {
 
     var scan: Observable<String>? = null
     var deviceName: String? = null
+    lateinit var btConnectionService: BluetoothConnectionService
 
 
     override fun onCreate() {
@@ -24,12 +25,14 @@ class HeartAssistantApplication : Application() {
 
         val prefs = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
         val btConnection = BluetoothConnection(this)
+        btConnectionService = BluetoothConnectionService(this)
         btConnection.checkBTPermissions()
         btConnection.validateBTOn()
 
         btConnection.discover()
         Log.d(_tag, prefs.getString(BT_DEV_UUID, ""))
         val device = btConnection.findDevice(prefs.getString(BT_DEV_KEY, ""))
+        Log.d(_tag, device.toString())
         if (device != null) {
             try{
                 val uuid = UUID.fromString(prefs.getString(BT_DEV_UUID, ""))
@@ -48,7 +51,7 @@ class HeartAssistantApplication : Application() {
     }
 
     fun startBTConnection(device: BluetoothDevice, uuid: UUID) {
-        val btConnectionService = BluetoothConnectionService(this)
+
         try {
             Log.d(_tag, "${device.address} + ${device.name} ${uuid} ")
             scan = btConnectionService.startClient(device, uuid)

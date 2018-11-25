@@ -221,9 +221,11 @@ class BluetoothConnectionService(internal var context: Context) {
      */
     private inner class ConnectedThread(private val socket: BluetoothSocket) : Thread() {
         private val inStream: InputStream?
+
 //        private val outStream: OutputStream?
 
         init {
+            Log.d(_tag, "CONNECTED THREAD")
             var tmpIn: InputStream? = null
 
             // Hide progress bar on connection
@@ -254,19 +256,15 @@ class BluetoothConnectionService(internal var context: Context) {
             while (true) {
                 // Read from the InputStream
                 try {
-                    Log.d(_tag, "READ1")
 //                    val incomingMessage = inStream!!.reader().readText()  // defaults to UTF-8
-                    val incomingMessage = inStream!!.bufferedReader().use { it.readText() }  // defaults to UTF-8
-//                    bytes = inStream!!.read(buffer)
-                    Log.d(_tag, "READ2")
+//                    val incomingMessage = inStream!!.bufferedReader().use { it.readText() }  // defaults to UTF-8
+                    bytes = inStream!!.read(buffer)
 //                    // parse data
-//                    val incomingMessage = String(buffer, 0, bytes)
-//                    Log.d(_tag, incomingMessage)
+                    val incomingMessage = String(buffer, 0, bytes)
+                    Log.d(_tag, incomingMessage)
 
-                    Log.d(_tag, "READ3" + incomingMessage)
 
                     emmitter?.onNext(incomingMessage)
-                    Log.d(_tag, "READ4")
 
 
                 } catch (e: IOException) {

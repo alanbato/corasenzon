@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
+import com.edgardo.corasensor.HeartAssistantApplication
 import com.edgardo.corasensor.R
 import com.edgardo.corasensor.database.ScanDatabase
 import com.edgardo.corasensor.networkUtility.BluetoothConnection
@@ -29,10 +30,17 @@ class ScanActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_scan)
 
-        bt_connect.validateBTOn()
+
 
         button_cancel.setOnClickListener { onClick(it) }
         button_finish.setOnClickListener { onClick(it) }
+
+        val application = application
+        if (application is HeartAssistantApplication) {
+            application.scan?.subscribe {
+                Log.d(_tag, it)
+            }
+        }
     }
 
     private fun onClick(v: View) {

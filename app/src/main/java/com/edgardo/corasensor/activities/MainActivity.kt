@@ -19,6 +19,7 @@ import com.edgardo.corasensor.database.ScanDataTest
 import com.edgardo.corasensor.database.ScanDatabase
 import com.edgardo.corasensor.fragments.scanListFragment
 import com.edgardo.corasensor.fragments.startScanFragment
+import com.edgardo.corasensor.networkUtility.BluetoothConnection
 import com.edgardo.corasensor.networkUtility.Executor.Companion.ioThread
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
@@ -29,6 +30,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     lateinit var instanceDatabase: ScanDatabase
 
+    lateinit var bt_connect: BluetoothConnection
+
     companion object {
         const val SCAN_KEY: String = "SCAN_KEY"
     }
@@ -38,13 +41,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        bt_connect = BluetoothConnection(this)
 
-        val application = application
-        if (application is HeartAssistantApplication) {
-            application.scan?.subscribe {
-                Log.d(_tag, it)
-            }
-        }
+
+        bt_connect.checkBTPermissions()
+        bt_connect.validateBTOn()
+
 
 
 
