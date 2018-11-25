@@ -32,21 +32,5 @@
         android:gravity="center"
         android:text="pressure" />
 
-    <TextView
-        android:id="@+id/text_systolic"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:paddingLeft="10dp"
-        android:gravity="center"
-        android:text="Sis" />
 
-    <TextView
-        android:id="@+id/text_distolic"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:paddingLeft="10dp"
-        android:gravity="center"
-        android:text="Dias:" />
 </LinearLayout>
