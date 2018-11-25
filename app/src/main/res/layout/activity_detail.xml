@@ -43,20 +43,29 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-
                 <TextView
                     android:id="@+id/label_pressure_systolic"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
                     android:layout_marginEnd="8dp"
                     android:layout_marginBottom="8dp"
                     android:text="@string/label_detail_pressure_systolic"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/text_pressure_systolic"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"/>
+                <EditText
+                    android:id="@+id/text_pressure_systolic"
+                    android:inputType="numberDecimal"
+                    android:layout_width="75dp"
+                    android:layout_height="49dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/label_presure_systolic_manual"
+                    app:layout_constraintTop_toTopOf="parent"/>
 
                 <TextView
                     android:id="@+id/label_presure_systolic_manual"
@@ -71,25 +80,10 @@
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <EditText
-                    android:id="@+id/text_pressure_systolic"
-                    android:layout_width="75dp"
-                    android:layout_height="49dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginBottom="8dp"
-                    android:ems="10"
-                    android:inputType="numberDecimal"
-                    android:text="117"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/label_presure_systolic_manual"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintVertical_bias="0.0" />
-
-                <EditText
                     android:id="@+id/text_systolic_manual"
                     android:layout_width="93dp"
                     android:layout_height="48dp"
                     android:layout_marginTop="8dp"
-                    android:layout_marginEnd="24dp"
                     android:layout_marginBottom="8dp"
                     android:ems="10"
                     android:inputType="numberDecimal"
@@ -140,7 +134,6 @@
                     android:layout_marginBottom="8dp"
                     android:ems="10"
                     android:inputType="numberDecimal"
-                    android:text="72"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/label_pressure_diastolic_manual"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -186,8 +179,6 @@
                     android:layout_marginTop="16dp"
                     android:layout_marginEnd="36dp"
                     android:layout_marginBottom="8dp"
-                    android:ems="10"
-                    android:text="116"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/label_pressure_avg_manual"
                     app:layout_constraintTop_toTopOf="parent"
@@ -203,21 +194,20 @@
                     android:text="@string/label_detail_pressure_avg_manual"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/text_avg_manual"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"/>
 
                 <EditText
                     android:id="@+id/text_avg_manual"
                     android:layout_width="93dp"
                     android:layout_height="48dp"
+                    android:inputType="numberDecimal"
                     android:layout_marginTop="8dp"
                     android:layout_marginEnd="24dp"
                     android:layout_marginBottom="8dp"
-                    android:ems="10"
-                    android:inputType="numberDecimal"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintVertical_bias="1.0" />
+                    app:layout_constraintVertical_bias="1.0"/>
             </android.support.constraint.ConstraintLayout>
 
             <android.support.constraint.ConstraintLayout
@@ -228,27 +218,25 @@
                     android:id="@+id/label_identifier"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginLeft="104dp"
                     android:layout_marginTop="8dp"
-                    android:layout_marginEnd="8dp"
                     android:layout_marginBottom="8dp"
                     android:text="@string/label_identifier"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/text_identifier"
-                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <EditText
                     android:id="@+id/text_identifier"
                     android:layout_width="75dp"
                     android:layout_height="49dp"
+                    android:layout_marginStart="20dp"
                     android:layout_marginBottom="8dp"
-                    android:ems="10"
-                    android:inputType="numberDecimal"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/label_identifier"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="1.0" />
 
 
             </android.support.constraint.ConstraintLayout>
