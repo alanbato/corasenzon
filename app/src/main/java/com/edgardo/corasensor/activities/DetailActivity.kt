@@ -37,7 +37,7 @@ class DetailActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         disableEditText(text_pressure_systolic)
         disableEditText(text_pressure_diastolic)
         disableEditText(text_presure_avg)
-        
+
         button_dont_save.setOnClickListener {
             Executor.ioThread {
                 instanceDatabase.scanDao().updateScan(scanRec)
