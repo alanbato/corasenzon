@@ -240,10 +240,8 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
         // btConnection = BluetoothConnectionService(this)
 
         if (selectedBtDevices.address != null) {
-            Log.d(_tag, "ENTERRR")
             val application = application
             if (application is HeartAssistantApplication) {
-                Log.d(_tag, "ENTERRR")
                 application.device = btDevices[i]
                 application.uuidConnection = uuidConnection
                 Toast.makeText(this, "Device Saved", Toast.LENGTH_SHORT).show()

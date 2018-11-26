@@ -20,6 +20,7 @@
     <!--Scan-->
     <string name="button_scan_cancel">Cancel</string>
     <string name="button_scan_finish">Finish</string>
+    <string name="msg_no_device_set">No device set yet</string>
 
     <!--Detail view-->
     <string name="label_detail_pressure_systolic">Systolic</string>
