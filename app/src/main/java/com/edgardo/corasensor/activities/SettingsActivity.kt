@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import android.widget.*
+import com.edgardo.corasensor.HeartAssistantApplication
 import com.edgardo.corasensor.R
 import com.edgardo.corasensor.database.ScanDatabase
 import com.edgardo.corasensor.networkUtility.BluetoothConnectionService
@@ -71,6 +72,17 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
         list_new_devices.onItemClickListener = this
         button_discover.setOnClickListener { click(it) }
+
+        val application = application
+        if (application is HeartAssistantApplication) {
+            val device = application.device
+            if (device != null) {
+                default_devices.text = "Device set ${device.name}"
+            } else {
+                default_devices.text = "No divice set"
+            }
+        }
+
     }
 
     /**
@@ -222,13 +234,25 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
                 .makeText(this, applicationContext.getString(R.string.msg_bt_pairing) + deviceName,
                         Toast.LENGTH_SHORT)
                 .show()
-        btDevices[i].createBond()
+        //btDevices[i].createBond()
 
         selectedBtDevices = btDevices[i]
-        btConnection = BluetoothConnectionService(this)
+        // btConnection = BluetoothConnectionService(this)
 
         if (selectedBtDevices.address != null) {
-            startBTConnection(selectedBtDevices, uuidConnection)
+            Log.d(_tag, "ENTERRR")
+            val application = application
+            if (application is HeartAssistantApplication) {
+                Log.d(_tag, "ENTERRR")
+                application.device = btDevices[i]
+                application.uuidConnection = uuidConnection
+                Toast.makeText(this, "Device Saved", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+
+            //startBTConnection(selectedBtDevices, uuidConnection)
+        }else{
+            Toast.makeText(this, "This device can't be saved", Toast.LENGTH_SHORT).show()
         }
 
     }
@@ -255,34 +279,6 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
     }
 
 
-    /**
-     * starting listening service method
-     */
-    private fun startBTConnection(device: BluetoothDevice, uuid: UUID) {
-        Log.d(_tag, "startBTConnection: Initializing RFCOM Bluetooth Connection.")
-
-        btConnection.startClient(device, uuid)
-                .debounce(300, TimeUnit.MILLISECONDS)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    try {
-                        val parData = it.split(";")
-                        // ms Time; mmHG; pulso
-                        response_data.append("${parData[0]} - ${parData[1]} - ${parData[2]} \n")
-                        val currentTime = parData[0].toDouble()
-
-                        //val scanData = ScanData(currentTime, parData[2].toDouble(), parData[1].toDouble(), 1)
-//                        ioThread {
-//                            Log.d(_tag, "Create")
-//                            instanceDatabase.scanDataDao().insertScanData(scanData)
-//                        }
-                    } catch (e: Exception) {
-                        response_data.append("Error ${it} \n")
-                        Log.d(_tag, "Data is no in correct format")
-                    }
-
-                }
-    }
 
     /**
      * Make device visible for 300 seconds
@@ -406,7 +402,7 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
             unregisterReceiver(pairingStatusChange)
             unregisterReceiver(updateListAdapter)
             unregisterReceiver(onBTChangeState)
-        }catch (e : Exception){
+        } catch (e: Exception) {
 
         }
 

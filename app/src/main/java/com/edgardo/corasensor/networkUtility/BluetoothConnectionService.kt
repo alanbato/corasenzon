@@ -243,13 +243,8 @@ class BluetoothConnectionService(internal var context: Context) {
                     bytes = inStream!!.read(buffer)
                     // parse data
                     val incomingMessage = String(buffer, 0, bytes)
-//                    Log.e(_tag, "OUPUT---: $incomingMessage")
 
                     emmitter?.onNext(incomingMessage)
-
-                    //val parseData = incomingMessage.split(";")
-
-                    //val info = "${parseData[0]} - ${parseData[1]} - ${parseData[2]} \n"
 
 
 
