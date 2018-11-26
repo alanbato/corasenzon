@@ -1,37 +1,34 @@
 package com.edgardo.corasensor.activities
 
-import android.Manifest
 import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
 import android.content.Context
-import android.support.v7.app.AppCompatActivity
-import android.os.Bundle
-import android.view.View
-import com.edgardo.corasensor.R
-import kotlinx.android.synthetic.main.activity_scan.*
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
+import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import android.widget.AdapterView
-import android.widget.ListView
-import android.widget.Toast
+import android.view.View
 import com.edgardo.corasensor.HeartAssistantApplication
+import com.edgardo.corasensor.R
+import com.edgardo.corasensor.Scan.Scan
 import com.edgardo.corasensor.database.ScanDatabase
 import com.edgardo.corasensor.networkUtility.BluetoothConnectionService
+import com.edgardo.corasensor.networkUtility.Executor.Companion.ioThread
+import com.jjoe64.graphview.GraphView
+import com.jjoe64.graphview.series.DataPoint
+import com.jjoe64.graphview.series.LineGraphSeries
 import io.reactivex.android.schedulers.AndroidSchedulers
-import kotlinx.android.synthetic.main.activity_settings.*
-import java.lang.Exception
+import kotlinx.android.synthetic.main.activity_scan.*
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 
 class ScanActivity : AppCompatActivity() {
+    lateinit var instanceDatabase: ScanDatabase
 
     val _tag = "ActivityScan"
     // List of bluetooth devices
@@ -45,8 +42,12 @@ class ScanActivity : AppCompatActivity() {
     var btAdapter: BluetoothAdapter? = null
     // Bluetooth connection
     lateinit var btConnection: BluetoothConnectionService
-    lateinit var instanceDatabase: ScanDatabase
+
     lateinit var progressDialogConnection: ProgressDialog
+    var firstTime = 0.0
+
+    lateinit var series: LineGraphSeries<DataPoint>
+    private var lastX: Double = 6.0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,6 +57,18 @@ class ScanActivity : AppCompatActivity() {
         btAdapter = BluetoothAdapter.getDefaultAdapter()
         btConnection = BluetoothConnectionService(this)
 
+        instanceDatabase = ScanDatabase.getInstance(this)
+
+        val graph = findViewById<View>(R.id.graph) as GraphView
+        series = LineGraphSeries()
+        graph.addSeries(series)
+        val viewport = graph.viewport
+        viewport.isYAxisBoundsManual = true
+        viewport.setMinY(0.0)
+        viewport.setMaxY(180.0)
+        viewport.isScrollable = true
+        viewport.isScalable = true
+
 
 
         validateBTOn()
@@ -64,7 +77,7 @@ class ScanActivity : AppCompatActivity() {
             val device = application.device
             val uuid = application.uuidConnection
             if (device != null && uuid != null) {
-                startBTConnection(device,uuid)
+                startBTConnection(device, uuid)
 
             } else {
                 // Back to Home
@@ -73,12 +86,42 @@ class ScanActivity : AppCompatActivity() {
 //                startActivity(intent)
             }
         }
+        button_cancel.setOnClickListener {
+            finish()
+        }
+        button_finish.setOnClickListener { onClick(it) }
 
         // Check for permissions on manifest
 //        checkBTPermissions()
 
-        button_cancel.setOnClickListener { onClick(it) }
-        button_finish.setOnClickListener { onClick(it) }
+    }
+
+    private fun addEntry(tiempo: Double, presion: Double) {
+        if (firstTime != 0.0){
+            firstTime = tiempo
+        }
+        var newTime = tiempo - firstTime
+
+        series.appendData(DataPoint(newTime, presion), true, 300)
+    }
+
+
+//    override fun onResume() {
+//        super.onResume()
+//        Thread(Runnable {
+//            while (true) {
+//                runOnUiThread { addEntry() }
+//                try {
+//                    Thread.sleep(20)
+//                } catch (e: InterruptedException) {
+//                    // manage error ...
+//                }
+//            }
+//        }).start()
+//    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        finish()
     }
 
     private fun onClick(v: View) {
@@ -87,8 +130,15 @@ class ScanActivity : AppCompatActivity() {
                 finish()
             }
             R.id.button_finish -> {
+                //El scan que se crea con los datos
+                val scan = Scan(brazo = true, idManual = "Prueba", pressureAvg = 100.0, pressureSystolic = 120.0, pressureDiastolic = 80.0, scanDate = "26/10/2018", pressureSystolicManual = 0.0, pressureDiastolicManual = 0.0, pressureAvgManual = 0.0)
+                ioThread {
+                    instanceDatabase.scanDao().insertScan(scan)
+                }
+
                 val intent = Intent(this, DetailActivity::class.java)
-                startActivity(intent)
+                intent.putExtra("SCAN_KEY", scan)
+                startActivityForResult(intent, 1)
             }
         }
     }
@@ -105,8 +155,10 @@ class ScanActivity : AppCompatActivity() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     try {
-                        //val parData = it.split(";")
+                        val processData = it.split(";")
                         Log.d(_tag, it)
+
+                        addEntry(processData[0].toDouble(), processData[1].toDouble())
                         // ms Time; mmHG; pulso
                         //response_data.append("${parData[0]} - ${parData[1]} - ${parData[2]} \n")
 //                        val currentTime = parData[0].toDouble()
