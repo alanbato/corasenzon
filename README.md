@@ -1,3 +1,4 @@
+![Logo](HeartLogo.png)
 # Heart Assistant
 Heart Assistant es una aplicación de monitoreo cardiaco para dispositivos móviles con sistema operativo Android, desarollada en Kotlin y con una interfaz basada en el Material Design.
 
