@@ -22,7 +22,6 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.*
 import java.util.concurrent.TimeUnit
-import android.system.Os.socket
 
 
 class BluetoothConnectionService(internal var context: Context) {
@@ -37,8 +36,7 @@ class BluetoothConnectionService(internal var context: Context) {
 
     private var connectedThread: ConnectedThread? = null
 
-    private var observable: Observable<String>? = null
-    private var emmitter: ObservableEmitter<String>? = null
+    private var emmitter : ObservableEmitter<String>? = null
     val _tag = "BTConnServer"
 
     companion object {
@@ -133,11 +131,10 @@ class BluetoothConnectionService(internal var context: Context) {
                 Log.e(_tag, "socket: is null")
             }
             try {
-                Log.d(_tag, "run: SOCKET CONNECTION")
+
                 btSocket!!.connect()
 
             } catch (e: IOException) {
-
                 // Close the socket
                 try {
                     // Close connection
@@ -146,12 +143,10 @@ class BluetoothConnectionService(internal var context: Context) {
                 } catch (e1: IOException) {
                     Log.e(_tag, "run: Error closing socket " + e1.message)
                 }
-
-
                 // Show error
-//                (context as Activity).runOnUiThread {
-//                    Toast.makeText(context, "Error connecting", Toast.LENGTH_SHORT).show()
-//                }
+                (context as Activity).runOnUiThread {
+                    Toast.makeText(context, "Error connecting", Toast.LENGTH_SHORT).show()
+                }
 
             }
 
@@ -192,27 +187,18 @@ class BluetoothConnectionService(internal var context: Context) {
     }
 
 
-    fun startClient(device: BluetoothDevice, uuid: UUID): Observable<String> {
+    fun startClient(device: BluetoothDevice, uuid: UUID) : Observable<String> {
         Log.d(_tag, "startClient: Started.")
-        if (observable != null) {
-            emmitter?.onComplete()
-        }
 
         // Progress for connection
-//        progressDialogConnection = ProgressDialog.show(context, "Connecting Bluetooth", "Please Wait...", true)
+        progressDialogConnection = ProgressDialog.show(context, "Connecting Bluetooth", "Please Wait...", true)
 
         connectThread = ConnectThread(device, uuid)
         connectThread!!.start()
-        Log.d(_tag, "Connection Started")
 
-        val connectable = Observable.create<String> {
+        return Observable.create {
             emmitter = it
-        }.publish()
-
-        connectable.connect()
-        observable = connectable
-
-        return connectable
+        }
     }
 
     /**
@@ -221,19 +207,17 @@ class BluetoothConnectionService(internal var context: Context) {
      */
     private inner class ConnectedThread(private val socket: BluetoothSocket) : Thread() {
         private val inStream: InputStream?
-
 //        private val outStream: OutputStream?
 
         init {
-            Log.d(_tag, "CONNECTED THREAD")
             var tmpIn: InputStream? = null
 
             // Hide progress bar on connection
-//            try {
-//                progressDialogConnection.dismiss()
-//            } catch (e: NullPointerException) {
-//                e.printStackTrace()
-//            }
+            try {
+                progressDialogConnection.dismiss()
+            } catch (e: NullPointerException) {
+                e.printStackTrace()
+            }
 
 
             try {
@@ -256,25 +240,20 @@ class BluetoothConnectionService(internal var context: Context) {
             while (true) {
                 // Read from the InputStream
                 try {
-//                    val incomingMessage = inStream!!.reader().readText()  // defaults to UTF-8
-//                    val incomingMessage = inStream!!.bufferedReader().use { it.readText() }  // defaults to UTF-8
                     bytes = inStream!!.read(buffer)
-//                    // parse data
+                    // parse data
                     val incomingMessage = String(buffer, 0, bytes)
-                    Log.d(_tag, incomingMessage)
-
 
                     emmitter?.onNext(incomingMessage)
 
 
+
                 } catch (e: IOException) {
-                    Log.e(_tag, "write: Error reading Input Stream. " + e.toString())
+                    Log.e(_tag, "write: Error reading Input Stream. " + e.message)
                     break
                 }
 
             }
-
-            emmitter?.onComplete()
         }
 
         // Shutdown the connection

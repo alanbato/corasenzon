@@ -7,8 +7,6 @@ import android.bluetooth.BluetoothDevice
 import android.content.*
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Parcel
-import android.os.Parcelable
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
@@ -19,26 +17,36 @@ import com.edgardo.corasensor.HeartAssistantApplication
 import com.edgardo.corasensor.R
 import com.edgardo.corasensor.database.ScanDatabase
 import com.edgardo.corasensor.networkUtility.BluetoothConnectionService
+import com.edgardo.corasensor.networkUtility.Executor.Companion.ioThread
+import com.edgardo.corasensor.scanData.ScanData
+import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.android.synthetic.main.activity_settings.*
+import java.lang.Exception
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
 class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
-    val _tag = "SettingsActi"
+    val _tag = "SettingAct"
     // List of bluetooth devices
     var btDevices = ArrayList<BluetoothDevice>()
     // Selected devices
     lateinit var selectedBtDevices: BluetoothDevice
     // Communication UUID
     private val uuidConnection = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-    // List adapter
-//    lateinit var devicesBTListAdapter: DevicesBTListAdapter
+
     // Bluetooth adapter
     var btAdapter: BluetoothAdapter? = null
+
     // Bluetooth connection
     lateinit var btConnection: BluetoothConnectionService
     lateinit var instanceDatabase: ScanDatabase
+
+    val formatter = SimpleDateFormat("HH:mm:ss.SSSXXX")
 
 
     companion object {
@@ -52,20 +60,6 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
 
         supportActionBar!!.title = applicationContext.getString(R.string.action_settings)
-        val application = application
-        if (application is HeartAssistantApplication) {
-            if (application.deviceName != null) {
-                default_devices.text = "Device set " + application.deviceName
-            } else {
-                default_devices.text = "No divice set"
-            }
-        }
-        if (application is HeartAssistantApplication) {
-            application.scan?.subscribe {
-                response_data.append(it)
-                Log.d(_tag, "READ ->" + it)
-            }
-        }
 
         btDevices = ArrayList()
 
@@ -78,6 +72,17 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
         list_new_devices.onItemClickListener = this
         button_discover.setOnClickListener { click(it) }
+
+        val application = application
+        if (application is HeartAssistantApplication) {
+            val device = application.device
+            if (device != null) {
+                default_devices.text = "Device set ${device.name}"
+            } else {
+                default_devices.text = "No divice set"
+            }
+        }
+
     }
 
     /**
@@ -199,7 +204,6 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
             if (action == BluetoothDevice.ACTION_FOUND) {
                 val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-
                 if (device.name != null) {
                     btDevices.add(device)
                     Log.d(_tag, "onReceive: " + device.name + ": " + device.address)
@@ -218,34 +222,37 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
         Log.d(_tag, "onItemClick: You Clicked on a device.")
         val deviceName = btDevices[i].name
+//        val deviceAddress = btDevices[i].address
+
+//        Log.d(_tag, "onItemClick: deviceName = $deviceName")
+//        Log.d(_tag, "onItemClick: deviceAddress = $deviceAddress")
+
+        //create the bond.
 
         Log.d(_tag, "Trying to pair with $deviceName")
         Toast
                 .makeText(this, applicationContext.getString(R.string.msg_bt_pairing) + deviceName,
                         Toast.LENGTH_SHORT)
                 .show()
-        btDevices[i].createBond()
+        //btDevices[i].createBond()
 
         selectedBtDevices = btDevices[i]
-        btConnection = BluetoothConnectionService(this)
+        // btConnection = BluetoothConnectionService(this)
 
         if (selectedBtDevices.address != null) {
-            val prefs = getSharedPreferences(HeartAssistantApplication.PREFERENCES, 0)
-            Log.d(_tag, selectedBtDevices.name)
-
-            prefs.edit().run {
-                putString(HeartAssistantApplication.BT_DEV_KEY, selectedBtDevices.address)
-                putString(HeartAssistantApplication.BT_DEV_UUID, uuidConnection.toString())
-                apply()
-            }
-            default_devices.text = selectedBtDevices.name
-            //selectedBtDevices.uuids.toString()
-
+            Log.d(_tag, "ENTERRR")
             val application = application
             if (application is HeartAssistantApplication) {
-                Log.d(_tag, "start connection")
-                application.startBTConnection(selectedBtDevices, uuidConnection)
+                Log.d(_tag, "ENTERRR")
+                application.device = btDevices[i]
+                application.uuidConnection = uuidConnection
+                Toast.makeText(this, "Device Saved", Toast.LENGTH_SHORT).show()
+                finish()
             }
+
+            //startBTConnection(selectedBtDevices, uuidConnection)
+        }else{
+            Toast.makeText(this, "This device can't be saved", Toast.LENGTH_SHORT).show()
         }
 
     }
@@ -271,10 +278,6 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
     }
 
-
-    /**
-     * starting listening service method
-     */
 
 
     /**
@@ -374,14 +377,35 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
         }
     }
 
+    private fun setAlertDialogList() {
+
+
+        val alert: AlertDialog.Builder = AlertDialog.Builder(this)
+
+        alert.setTitle("Devices")
+
+        val list = ListView(this)
+        list.adapter = DevicesBTListAdapter(this, R.layout.row_devices_bt, btDevices)
+        list.onItemClickListener = this
+
+        alert.setView(list)
+        alert.show()
+
+
+    }
 
     override fun onDestroy() {
         Log.d(_tag, "onDestroy: called.")
         super.onDestroy()
-        unregisterReceiver(changeOnAction)
-        unregisterReceiver(pairingStatusChange)
-        unregisterReceiver(updateListAdapter)
-        unregisterReceiver(onBTChangeState)
+        try {
+            unregisterReceiver(changeOnAction)
+            unregisterReceiver(pairingStatusChange)
+            unregisterReceiver(updateListAdapter)
+            unregisterReceiver(onBTChangeState)
+        } catch (e: Exception) {
+
+        }
+
     }
 
 

@@ -19,11 +19,11 @@ class ScanDataTest (var context: Context ) {
     }
 
     fun dataList(){
-        scanList.add(Scan(pressureAvg = 100.0, pressureSystolic = 120.0, pressureDiastolic = 80.0, scanDate = "26/10/2018"))
-        scanList.add(Scan(pressureAvg = 106.0, pressureSystolic = 117.0, pressureDiastolic = 72.0, scanDate = "25/10/2018"))
-        scanList.add(Scan(pressureAvg = 97.0, pressureSystolic = 119.0, pressureDiastolic = 75.0, scanDate = "24/10/2018"))
-        scanList.add(Scan(pressureAvg = 102.0, pressureSystolic = 124.0, pressureDiastolic = 79.0, scanDate = "24/10/2018"))
-        scanList.add(Scan(pressureAvg = 104.0, pressureSystolic = 126.0, pressureDiastolic = 80.0, scanDate = "23/10/2018"))
+        scanList.add(Scan(brazo = true, idManual = "PRE" ,pressureAvg = 100.0, pressureSystolic = 120.0, pressureDiastolic = 80.0, scanDate = "26/10/2018", pressureSystolicManual = 0.0, pressureDiastolicManual = 0.0, pressureAvgManual = 0.0))
+        scanList.add(Scan(brazo = false, idManual = "JLP" ,pressureAvg = 106.0, pressureSystolic = 117.0, pressureDiastolic = 72.0, scanDate = "25/10/2018", pressureSystolicManual = 0.0, pressureDiastolicManual = 0.0, pressureAvgManual = 0.0))
+        scanList.add(Scan(brazo = true, idManual = "" ,pressureAvg = 97.0, pressureSystolic = 119.0, pressureDiastolic = 75.0, scanDate = "24/10/2018", pressureSystolicManual = 0.0, pressureDiastolicManual = 0.0, pressureAvgManual = 0.0))
+        scanList.add(Scan(brazo = false, idManual = "HLJ" ,pressureAvg = 102.0, pressureSystolic = 124.0, pressureDiastolic = 79.0, scanDate = "24/10/2018", pressureSystolicManual = 0.0, pressureDiastolicManual = 0.0, pressureAvgManual = 0.0))
+        scanList.add(Scan(brazo = true, idManual = "EAO" ,pressureAvg = 104.0, pressureSystolic = 126.0, pressureDiastolic = 80.0, scanDate = "23/10/2018", pressureSystolicManual = 0.0, pressureDiastolicManual = 0.0, pressureAvgManual = 0.0))
     }
 }
 

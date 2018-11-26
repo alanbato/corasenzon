@@ -54,20 +54,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         setSupportActionBar(toolbar)
         instanceDatabase = ScanDatabase.getInstance(this)
 
-        fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        }
-//        ioThread {
-//            val cant = instanceDatabase.scanDao().getAnyScan()
-//            if(cant == 0 ){
-//                insertScans()
-//            }else{
-//                loadScans()
-//            }
-//        }
-
-
         with(supportFragmentManager.beginTransaction()) {
             add(R.id.fragment_list_scan, startScan)
             commit()
