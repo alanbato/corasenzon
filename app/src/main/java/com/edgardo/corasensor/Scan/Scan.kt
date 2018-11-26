@@ -17,8 +17,8 @@ data class Scan(@ColumnInfo(name = "PressureScanAvg") var pressureAvg: Double?,
                 @ColumnInfo(name = "PressureSystolicManual") var pressureSystolicManual: Double? = null,
                 @ColumnInfo(name = "PressureDiastolicManual") var pressureDiastolicManual: Double? = null,
                 @ColumnInfo(name = "ScanDate") var scanDate: String?,
-                @ColumnInfo(name = "idManual") var idManual: String?
-
+                @ColumnInfo(name = "idManual") var idManual: String?,
+                @ColumnInfo(name = "brazo") var brazo: Boolean? //True = right, False = left
 ) : Parcelable {
     @ColumnInfo(name = "_id")
     @PrimaryKey(autoGenerate = true)
@@ -32,7 +32,8 @@ data class Scan(@ColumnInfo(name = "PressureScanAvg") var pressureAvg: Double?,
             parcel.readValue(Double::class.java.classLoader) as? Double,
             parcel.readValue(Double::class.java.classLoader) as? Double,
             parcel.readString(),
-            parcel.readString()) {
+            parcel.readString(),
+            parcel.readValue(Boolean::class.java.classLoader) as? Boolean) {
         _id = parcel.readInt()
     }
 
@@ -45,6 +46,7 @@ data class Scan(@ColumnInfo(name = "PressureScanAvg") var pressureAvg: Double?,
         parcel.writeValue(pressureDiastolicManual)
         parcel.writeString(scanDate)
         parcel.writeString(idManual)
+        parcel.writeValue(brazo)
         parcel.writeInt(_id)
     }
 

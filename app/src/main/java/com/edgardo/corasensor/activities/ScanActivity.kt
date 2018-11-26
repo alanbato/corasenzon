@@ -12,16 +12,23 @@ import com.jjoe64.graphview.Viewport
 import com.jjoe64.graphview.series.DataPoint
 import kotlin.concurrent.thread
 import com.edgardo.corasensor.R.id.graph
+import com.edgardo.corasensor.Scan.Scan
+
+import com.edgardo.corasensor.database.ScanDatabase
+import com.edgardo.corasensor.networkUtility.Executor.Companion.ioThread
+
 import java.util.*
 
 
 class ScanActivity : AppCompatActivity() {
+    lateinit var instanceDatabase: ScanDatabase
 
     lateinit var series : LineGraphSeries<DataPoint>
     private var lastX : Double = 6.0
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_scan)
+        instanceDatabase = ScanDatabase.getInstance(this)
 
         val graph = findViewById<View>(R.id.graph) as GraphView
         series = LineGraphSeries()
@@ -72,7 +79,14 @@ class ScanActivity : AppCompatActivity() {
                 finish()
             }
             R.id.button_finish -> {
+                //El scan que se crea con los datos
+                val scan = Scan(brazo = true, idManual = "Prueba" ,pressureAvg = 100.0, pressureSystolic = 120.0, pressureDiastolic = 80.0, scanDate = "26/10/2018", pressureSystolicManual = 0.0, pressureDiastolicManual = 0.0, pressureAvgManual = 0.0)
+                ioThread {
+                    instanceDatabase.scanDao().insertScan(scan)
+                }
+
                 val intent = Intent(this, DetailActivity::class.java)
+                intent.putExtra("SCAN_KEY", scan )
                 startActivityForResult(intent,1)
             }
         }
