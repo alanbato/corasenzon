@@ -146,6 +146,7 @@ class BluetoothConnectionService(internal var context: Context) {
                 // Show error
                 (context as Activity).runOnUiThread {
                     Toast.makeText(context, "Error connecting", Toast.LENGTH_SHORT).show()
+                    (context as Activity).finish()
                 }
 
             }

@@ -1,10 +1,15 @@
 package com.edgardo.corasensor.activities
 
+import android.Manifest
+import android.app.Activity
 import android.arch.lifecycle.Observer
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.design.widget.NavigationView
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
@@ -34,6 +39,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     companion object {
         const val SCAN_KEY: String = "SCAN_KEY"
+        // BT code permission
+        const val BLUETOOTH_REQUEST_PERMISSION = 1001
     }
 
     val scanListFragment = scanListFragment()
@@ -44,7 +51,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         bt_connect = BluetoothConnection(this)
 
 
-        bt_connect.checkBTPermissions()
+        checkBTPermissions()
         bt_connect.validateBTOn()
 
 
@@ -66,6 +73,22 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         nav_view.setNavigationItemSelectedListener(this)
 
+
+    }
+    fun checkBTPermissions() {
+
+        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) &&
+                (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED)) {
+
+            ActivityCompat.requestPermissions(this,arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION), BLUETOOTH_REQUEST_PERMISSION)
+
+        } else {
+            Log.d(_tag, "Permission: (already)  GRANTED")
+//            Log.d(_tag, "Permission: DENIED")
+        }
 
     }
 

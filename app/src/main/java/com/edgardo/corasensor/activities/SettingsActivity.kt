@@ -224,9 +224,6 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
         val deviceName = btDevices[i].name
 //        val deviceAddress = btDevices[i].address
 
-//        Log.d(_tag, "onItemClick: deviceName = $deviceName")
-//        Log.d(_tag, "onItemClick: deviceAddress = $deviceAddress")
-
         //create the bond.
 
         Log.d(_tag, "Trying to pair with $deviceName")
@@ -237,7 +234,6 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
         //btDevices[i].createBond()
 
         selectedBtDevices = btDevices[i]
-        // btConnection = BluetoothConnectionService(this)
 
         if (selectedBtDevices.address != null) {
             val application = application
@@ -375,22 +371,6 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
         }
     }
 
-    private fun setAlertDialogList() {
-
-
-        val alert: AlertDialog.Builder = AlertDialog.Builder(this)
-
-        alert.setTitle("Devices")
-
-        val list = ListView(this)
-        list.adapter = DevicesBTListAdapter(this, R.layout.row_devices_bt, btDevices)
-        list.onItemClickListener = this
-
-        alert.setView(list)
-        alert.show()
-
-
-    }
 
     override fun onDestroy() {
         Log.d(_tag, "onDestroy: called.")
@@ -405,30 +385,5 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
         }
 
     }
-
-
-//     Enable / Disable bluetooth
-//    fun enableDisableBT() {
-//        if (btAdapter == null) {
-//            Log.d(_tag, "enableDisableBT: Does not have BT capabilities.")
-//        }
-//        if (!btAdapter!!.isEnabled) {
-//            Log.d(_tag, "enableDisableBT: enabling BT.")
-//            val enableBTIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-//            startActivity(enableBTIntent)
-//
-//            val BTIntent = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
-//            registerReceiver(changeOnAction, BTIntent)
-//        }
-//        if (btAdapter!!.isEnabled) {
-//            Log.d(_tag, "enableDisableBT: disabling BT.")
-//            btAdapter!!.disable()
-//
-//            val BTIntent = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
-//            registerReceiver(changeOnAction, BTIntent)
-//        }
-//
-//    }
-
 
 }

@@ -19,6 +19,7 @@ lateinit var peak_cuff: ArrayList<Double>
 lateinit var peak_ampl: ArrayList<Double>
 lateinit var sys_cand: ArrayList<Double>
 lateinit var dia_cand: ArrayList<Double>
+lateinit var result: ArrayList<Double>
 var diastolic: Double = 0.0
 var systolic: Double = 0.0
 
@@ -27,7 +28,7 @@ var promPend = 0.0
 val const_fixmmhg = 4
 val const_prom = 9.0
 
-fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<Double>) {
+fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<Double>): ArrayList<Double> {
 
     //initprogress dialog
     progressDialogConnection = ProgressDialog.show(context, "Calculating", "Please Wait...", true)
@@ -133,13 +134,13 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
         if (start[i] != 0.0) {
             start_memory.add(start[i])
         } else {
-            start_memory.add(start_memory[i-1])
+            start_memory.add(start_memory[i - 1])
         }
         //Adds start_time
         if (start[i] != 0.0) {
             start_time.add(times[i])
         } else {
-            start_time.add(start_time[i-1])
+            start_time.add(start_time[i - 1])
         }
         //Los agrega aunque los va a modificar en el siguiente ciclo
         end_memory.add(0.0)
@@ -164,39 +165,44 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
 
     //Fills peak_cuff
     for (i in 0 until mmMercury.size - 10) {
-        if(peak[i] != 0.0){
-            peak_cuff.add(((end_memory[i]-start_memory[i])/(end_time[i]-start_time[i]))*(times[i]-start_time[i])+ start_memory[i])
-        }else{
+        if (peak[i] != 0.0) {
+            peak_cuff.add(((end_memory[i] - start_memory[i]) / (end_time[i] - start_time[i])) * (times[i] - start_time[i]) + start_memory[i])
+        } else {
             peak_cuff.add(0.0)
         }
     }
 
     //Fills peak_amp
     for (i in 0 until mmMercury.size - 10) {
-        if(peak[i] != 0.0){
+        if (peak[i] != 0.0) {
             peak_ampl.add(peak[i] - peak_cuff[i])
-        }else{
+        } else {
             peak_ampl.add(0.0)
         }
     }
-    var max_peak_ampl : Double = peak_ampl.max() ?: 0.0
+    var max_peak_ampl: Double = peak_ampl.max() ?: 0.0
 
     for (i in 0 until mmMercury.size - 10) {
-        if(peak_ampl[i] != 0.0 && peak_ampl[i] >= 0.5 * max_peak_ampl){
+        if (peak_ampl[i] != 0.0 && peak_ampl[i] >= 0.5 * max_peak_ampl) {
             systolic = peak[i]
-        }else{
+        } else {
             sys_cand.add(0.0)
         }
     }
 
-    for (i in peak_ampl.size - 1 .. 0) {
-        if(peak_ampl[i] != 0.0 && peak_ampl[i] >= 0.8 * max_peak_ampl){
+    for (i in peak_ampl.size - 1..0) {
+        if (peak_ampl[i] != 0.0 && peak_ampl[i] >= 0.8 * max_peak_ampl) {
             diastolic = peak[i]
-        }else{
+        } else {
             sys_cand.add(0.0)
         }
     }
     progressDialogConnection.dismiss()
+
+
+    result.add(diastolic)
+    result.add(systolic)
+    return result
 }
 
 private fun cal_prom(arrayList: ArrayList<Double>): Double {

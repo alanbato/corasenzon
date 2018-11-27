@@ -16,6 +16,7 @@ import com.edgardo.corasensor.HeartAssistantApplication
 import com.edgardo.corasensor.R
 import com.edgardo.corasensor.Scan.Scan
 import com.edgardo.corasensor.database.ScanDatabase
+import com.edgardo.corasensor.helpers.calculate
 import com.edgardo.corasensor.networkUtility.BluetoothConnectionService
 import com.edgardo.corasensor.networkUtility.Executor.Companion.ioThread
 import com.jjoe64.graphview.GraphView
@@ -25,6 +26,15 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.android.synthetic.main.activity_scan.*
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
+
+import android.graphics.Canvas
+import android.graphics.Paint
+
+import android.widget.Toast
+import android.R.attr.data
+import android.animation.ObjectAnimator
+import android.text.TextPaint
 
 
 class ScanActivity : AppCompatActivity() {
@@ -47,7 +57,11 @@ class ScanActivity : AppCompatActivity() {
     var firstTime = 0.0
 
     lateinit var series: LineGraphSeries<DataPoint>
-    private var lastX: Double = 6.0
+
+    lateinit var time_measure: ArrayList<Double>
+    lateinit var pressure: ArrayList<Double>
+    lateinit var result: ArrayList<Double>
+    lateinit var needle: Needle
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,6 +72,25 @@ class ScanActivity : AppCompatActivity() {
         btConnection = BluetoothConnectionService(this)
 
         instanceDatabase = ScanDatabase.getInstance(this)
+
+
+        val layout1 = findViewById<android.support.constraint.ConstraintLayout>(R.id.manometro)
+        val canvass = Canvass(this, 230f, false)
+        val white = Canvass(this, 180f, true)
+        needle = Needle(this)
+        var rotation = 30f
+        var nameVal = 20
+        for (i in 0..10) {
+            val grade = Grade(this, rotation, nameVal)
+            layout1.addView(grade)
+            rotation = rotation + 30f
+            nameVal += 20
+        }
+        layout1.addView(needle)
+        layout1.addView(canvass)
+        layout1.addView(white)
+        needle.setOnClickListener(needle)
+
 
         val graph = findViewById<View>(R.id.graph) as GraphView
         series = LineGraphSeries()
@@ -78,12 +111,9 @@ class ScanActivity : AppCompatActivity() {
             val uuid = application.uuidConnection
             if (device != null && uuid != null) {
                 startBTConnection(device, uuid)
-
             } else {
                 // Back to Home
                 finish()
-//                val intent = Intent(this, MainActivity::class.java)
-//                startActivity(intent)
             }
         }
         button_cancel.setOnClickListener {
@@ -91,34 +121,98 @@ class ScanActivity : AppCompatActivity() {
         }
         button_finish.setOnClickListener { onClick(it) }
 
-        // Check for permissions on manifest
-//        checkBTPermissions()
+    }
+
+
+    inner class Grade(context: Context, var rotate: Float, var name: Int) : View(context) {
+        val paint = Paint()
+        val textPaint = TextPaint().apply {
+            textSize = 60f
+            rotation = -rotate
+        }
+
+        override fun onDraw(canvas: Canvas) {
+            val width = getWidth()
+            val centerX = width.toFloat() / 2
+            val centerY = height.toFloat() / 2
+            paint.strokeWidth = 15f
+            canvas.drawLine(centerX, centerY, centerX, centerY + 320, paint).apply {
+                rotation = rotate
+            }
+            canvas.drawText(name.toString(), centerX, centerY + 370, textPaint).apply {
+                rotation = rotate
+            }
+        }
+    }
+
+    inner class Canvass(context: Context, var radius: Float, var white: Boolean)
+        : View(context), View.OnClickListener {
+        val paint = Paint()
+        val textPaint = TextPaint().apply {
+            textSize = 80f
+        }
+        var pressureVal: Int = 90
+        override fun onDraw(canvas: Canvas) {
+            val width = getWidth()
+            val centerX = width.toFloat() / 2
+            val centerY = height.toFloat() / 2
+            if (white) {
+                paint.setARGB(255, 250, 250, 255)
+                canvas.drawCircle(centerX, centerY, this.radius, paint)
+                canvas.drawText(pressureVal.toString(), centerX - 30, centerY + 30, textPaint)
+            } else {
+                paint.setARGB(255, 200, 200, 200)
+                canvas.drawCircle(centerX, centerY, this.radius, paint)
+            }
+        }
+
+        override fun onClick(v: View?) {
+            pressureVal += 10
+        }
+    }
+
+    inner class Needle(context: Context) : View(context), View.OnClickListener {
+        val paint = Paint()
+        val textPaint = TextPaint().apply { textSize = 16f }
+        override fun onDraw(canvas: Canvas) {
+            val width = getWidth()
+            paint.setARGB(255, 255, 0, 0)
+            val centerX = width.toFloat() / 2
+            val centerY = height.toFloat() / 2
+            val downY = centerY + 300f
+            paint.strokeWidth = 20f
+            canvas.drawLine(centerX, centerY, centerX, downY, paint).apply {
+                rotation = 30f
+            }
+        }
+
+        override fun onClick(v: View?) {
+            ObjectAnimator.ofFloat(v, "rotation", v!!.rotation + 10f).start()
+        }
 
     }
 
+    private fun updateValue(v: View?, newVal: Float) {
+        var new_rotation = newVal - v!!.rotation - 20
+        if (new_rotation > 260f) {
+            new_rotation = 280f
+        } else if (new_rotation < 20f) {
+            new_rotation = 20f
+        }
+        new_rotation += 50f
+
+        ObjectAnimator.ofFloat(v, "rotation", new_rotation).start()
+    }
+
+
     private fun addEntry(tiempo: Double, presion: Double) {
-        if (firstTime != 0.0){
+        if (firstTime != 0.0) {
             firstTime = tiempo
         }
         var newTime = tiempo - firstTime
 
         series.appendData(DataPoint(newTime, presion), true, 300)
     }
-
-
-//    override fun onResume() {
-//        super.onResume()
-//        Thread(Runnable {
-//            while (true) {
-//                runOnUiThread { addEntry() }
-//                try {
-//                    Thread.sleep(20)
-//                } catch (e: InterruptedException) {
-//                    // manage error ...
-//                }
-//            }
-//        }).start()
-//    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         finish()
@@ -130,8 +224,10 @@ class ScanActivity : AppCompatActivity() {
                 finish()
             }
             R.id.button_finish -> {
+
+                result = calculate(this, pressure, time_measure)
                 //El scan que se crea con los datos
-                val scan = Scan(brazo = true, idManual = "Prueba", pressureAvg = 100.0, pressureSystolic = 120.0, pressureDiastolic = 80.0, scanDate = "26/10/2018", pressureSystolicManual = 0.0, pressureDiastolicManual = 0.0, pressureAvgManual = 0.0)
+                val scan = Scan(brazo = true, idManual = "Prueba", pressureAvg = 100.0, pressureSystolic = result[1], pressureDiastolic = result[0], scanDate = "26/10/2018", pressureSystolicManual = 0.0, pressureDiastolicManual = 0.0, pressureAvgManual = 0.0)
                 ioThread {
                     instanceDatabase.scanDao().insertScan(scan)
                 }
@@ -151,26 +247,21 @@ class ScanActivity : AppCompatActivity() {
         Log.d(_tag, "startBTConnection: Initializing RFCOM Bluetooth Connection.")
 
         btConnection.startClient(device, uuid)
-                .debounce(10, TimeUnit.MILLISECONDS)
+                .debounce(5, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     try {
                         val processData = it.split(";")
-                        Log.d(_tag, it)
-
+                        updateValue(needle, processData[1].toFloat())
                         addEntry(processData[0].toDouble(), processData[1].toDouble())
+                        Log.d(_tag, "Value " + it)
+                        time_measure.add(processData[0].toDouble())
+                        pressure.add(processData[1].toDouble())
+
                         // ms Time; mmHG; pulso
                         //response_data.append("${parData[0]} - ${parData[1]} - ${parData[2]} \n")
-//                        val currentTime = parData[0].toDouble()
-
-//                        val scanData = ScanData(currentTime, parData[2].toDouble(), parData[1].toDouble(), 1)
-//                        Executor.ioThread {
-//                            Log.d(_tag, "Create")
-//                            instanceDatabase.scanDataDao().insertScanData(scanData)
-//                        }
                     } catch (e: Exception) {
-                        //response_data.append("Error ${it} \n")
-                        Log.d(_tag, "Data is no in correct format")
+                        Log.d(_tag, "Data is no in correct format" + it)
                     }
 
                 }

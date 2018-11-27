@@ -32,20 +32,11 @@ class BluetoothConnection(internal var context: Context) {
     var btDevicesName = ArrayList<String>()
 
 
-    // Bluetooth connection
-    lateinit var btConnection: BluetoothConnectionService
-
     // Selected devices
     lateinit var selectedBtDevices: BluetoothDevice
 
-    //
-    var discovering = true
-
     // BT code permission
     val BLUETOOTH_REQUEST_PERMISSION = 1001
-
-    // Communication UUID
-    private val uuidConnection = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
 
     /**
@@ -92,15 +83,6 @@ class BluetoothConnection(internal var context: Context) {
         context.registerReceiver(pairingStatusChange, filter)
     }
 
-    fun findDevice(address: String?): BluetoothDevice? {
-        try {
-            val btDevice = btAdapter?.getRemoteDevice(address)
-            return btDevice
-        } catch (e: Exception) {
-            return null
-        }
-
-    }
 
 
     /**
@@ -161,43 +143,6 @@ class BluetoothConnection(internal var context: Context) {
     }
 
     /**
-     * Start looking fot devices
-     */
-    fun discover() {
-        Log.d(_tag, "Discovering: Looking for unpaired devices.")
-        Toast
-                .makeText(context, context.getString(R.string.msg_bt_searching),
-                        Toast.LENGTH_SHORT)
-                .show()
-
-        // Check for permissions on manifest
-        checkBTPermissions()
-        //  Make device visible
-//        enableDicvoveringMode()
-
-        if (btAdapter!!.isDiscovering) {
-            btAdapter!!.cancelDiscovery()
-            discovering = false
-            Log.d(_tag, "Discovering: Canceling discovery.")
-
-
-            btAdapter!!.startDiscovery()
-            val discoverDevicesIntent = IntentFilter(BluetoothDevice.ACTION_FOUND)
-            context.registerReceiver(setDevices, discoverDevicesIntent)
-        }
-        if (!btAdapter!!.isDiscovering) {
-
-            btAdapter!!.startDiscovery()
-            val discoverDevicesIntent = IntentFilter(BluetoothDevice.ACTION_FOUND)
-
-            context.registerReceiver(onBTChangeState, discoverDevicesIntent)
-            context.registerReceiver(setDevices, discoverDevicesIntent)
-
-        }
-    }
-
-
-    /**
      * Request permission to access bluetooth
      */
     fun checkBTPermissions() {
@@ -211,29 +156,8 @@ class BluetoothConnection(internal var context: Context) {
                     Manifest.permission.ACCESS_COARSE_LOCATION), BLUETOOTH_REQUEST_PERMISSION)
 
         } else {
-            Log.d(_tag, "Permission: DENIED")
+//            Log.d(_tag, "Permission: DENIED")
         }
-
-    }
-
-
-    /**
-     * Make device visible for 300 seconds
-     */
-    private fun enableDicvoveringMode() {
-        Log.d(_tag, "enableDicvoveringMode: Making device discoverable for 300 seconds.")
-
-        Toast
-                .makeText(context, context.getString(R.string.msg_bt_discovering_mode),
-                        Toast.LENGTH_SHORT)
-                .show()
-
-        val discoverableIntent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
-        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
-        context.startActivity(discoverableIntent)
-
-        val intentFilter = IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED)
-        context.registerReceiver(onBTChangeState, intentFilter)
 
     }
 
