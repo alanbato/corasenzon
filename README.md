@@ -1,6 +1,6 @@
 # Heart Assistant
 Heart Assistant
-![HeartLogo](HALogo.png)
+![HeartLogo](HeartLogo.png)
 ### Objetivo
 Heart Assistant busca cambiar la manera en la que los doctores y enfermeros toman la presión arterial, con el fin de traer estos métodos basados en la experiencia a la era digital y desbloquear todas las oportunidades que esto implica.
 
