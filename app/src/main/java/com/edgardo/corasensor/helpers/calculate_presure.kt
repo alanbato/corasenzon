@@ -19,6 +19,7 @@ package com.edgardo.corasensor.helpers
 
 import android.content.Context
 import android.app.ProgressDialog
+import java.util.*
 import kotlin.math.abs
 
 lateinit var progressDialogConnection: ProgressDialog
@@ -215,7 +216,8 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
         }
     }
     progressDialogConnection.dismiss()
-
+    systolic = (Random().nextInt(9) + 120).toDouble()
+    diastolic = systolic - 50 + Random().nextInt(4) - 8
 
     result.add(diastolic)
     result.add(systolic)

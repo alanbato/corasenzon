@@ -17,6 +17,7 @@
 
 package com.edgardo.corasensor.activities
 
+import android.animation.ObjectAnimator
 import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.bluetooth.BluetoothAdapter
@@ -25,51 +26,41 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.text.TextPaint
 import android.util.Log
 import android.view.View
 import com.edgardo.corasensor.HeartAssistantApplication
 import com.edgardo.corasensor.R
 import com.edgardo.corasensor.Scan.Scan
 import com.edgardo.corasensor.database.ScanDatabase
+import com.edgardo.corasensor.helpers.Converters
 import com.edgardo.corasensor.helpers.calculate
 import com.edgardo.corasensor.networkUtility.BluetoothConnectionService
 import com.edgardo.corasensor.networkUtility.Executor.Companion.ioThread
 import com.jjoe64.graphview.GraphView
+import com.jjoe64.graphview.Viewport
 import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
 import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.android.synthetic.main.activity_scan.*
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
-import android.graphics.Canvas
-import android.graphics.Paint
-
-import android.widget.Toast
-import android.R.attr.data
-import android.animation.ObjectAnimator
-import android.annotation.SuppressLint
-import android.graphics.Bitmap
-import android.text.TextPaint
-import com.jjoe64.graphview.Viewport
-import io.reactivex.Observable
-import java.text.SimpleDateFormat
-import java.util.*
-import java.util.Random
-
 class ScanActivity : AppCompatActivity() {
     lateinit var instanceDatabase: ScanDatabase
-
+    var pressureVal: Double = 0.0
     val _tag = "ActivityScan"
     // List of bluetooth devices
     var btDevices = ArrayList<BluetoothDevice>()
     // Selected devices
     lateinit var selectedBtDevices: BluetoothDevice
-    // Communication UUID
-//    private val uuidConnection = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-    // List adapter
+
     // Bluetooth adapter
     var btAdapter: BluetoothAdapter? = null
     // Bluetooth connection
@@ -88,9 +79,10 @@ class ScanActivity : AppCompatActivity() {
     lateinit var pressure: ArrayList<Double>
     lateinit var result: ArrayList<Double>
     lateinit var needle: Needle
+    var runtime: Long = 0
 
     val sdf = SimpleDateFormat("dd/M/yyyy hh:mm:ss")
-
+    lateinit var canvass : Canvass
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,15 +91,15 @@ class ScanActivity : AppCompatActivity() {
         time_measure = ArrayList()
         pressure = ArrayList()
         result = ArrayList()
+        runtime = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
 
         btAdapter = BluetoothAdapter.getDefaultAdapter()
         btConnection = BluetoothConnectionService(this)
 
         instanceDatabase = ScanDatabase.getInstance(this)
 
-
         val layout1 = findViewById<android.support.constraint.ConstraintLayout>(R.id.manometro)
-        val canvass = Canvass(this, 230f, false)
+        canvass = Canvass(this, 230f, false)
         val white = Canvass(this, 180f, true)
         needle = Needle(this)
         var rotation = 30f
@@ -148,33 +140,34 @@ class ScanActivity : AppCompatActivity() {
                 finish()
             }
         }
-        button_cancel.setOnClickListener {
-            finish()
-        }
+        button_cancel_scan.setOnClickListener {onClick(it)}
         button_finish.setOnClickListener { onClick(it) }
 
     }
 
     private fun onClick(v: View) {
         when (v.id) {
-            R.id.button_cancel -> {
+            R.id.button_cancel_scan -> {
+                Log.d(_tag,"Activity finish")
+                btConnection.disconnect()
                 finish()
             }
             R.id.button_finish -> {
-                viewport.setMaxX(time_measure[time_measure.size - 1])
+                btConnection.disconnect()
+                var finishTime = (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - runtime).toDouble()
+                viewport.setMaxX(finishTime)
                 viewport.setMinX(0.0)
-                val image: Bitmap = graph.takeSnapshot()
+                val image: ByteArray = Converters.toByteArray(graph.takeSnapshot())
 
                 result = calculate(this, pressure, time_measure)
                 val currentDate = sdf.format(Date())
                 val avg = (result[0] + result[1]) / 2
 
                 //El scan que se crea con los datos
-                val scan = Scan(brazo = true, idManual = "", pressureAvg = avg, pressureSystolic = result[1], pressureDiastolic = result[0], scanDate = currentDate, pressureSystolicManual = 0.0, pressureDiastolicManual = 0.0, pressureAvgManual = 0.0)
+                val scan = Scan(brazo = true, idManual = "", pressureAvg = avg, pressureSystolic = result[1], pressureDiastolic = result[0], scanDate = currentDate, pressureSystolicManual = 0.0, pressureDiastolicManual = 0.0, pressureAvgManual = 0.0, image = image)
                 ioThread {
                     instanceDatabase.scanDao().insertScan(scan)
                 }
-                Log.d(_tag, "ID ->>>>>" + scan._id.toString())
                 val intent = Intent(this, DetailActivity::class.java)
                 intent.putExtra("SCAN_KEY", scan)
                 startActivityForResult(intent, 1)
@@ -206,10 +199,9 @@ class ScanActivity : AppCompatActivity() {
     inner class Canvass(context: Context, var radius: Float, var white: Boolean)
         : View(context), View.OnClickListener {
         val paint = Paint()
-        val textPaint = TextPaint().apply {
+        var textPaint = TextPaint().apply {
             textSize = 80f
         }
-        var pressureVal: Int = 90
         override fun onDraw(canvas: Canvas) {
             val width = getWidth()
             val centerX = width.toFloat() / 2
@@ -261,15 +253,15 @@ class ScanActivity : AppCompatActivity() {
 
 
     private fun addEntry(tiempo: Double, presion: Double) {
-        if (firstTime != 0.0) {
-            firstTime = tiempo
-        }
-        var newTime = tiempo - firstTime
+//        if (firstTime != 0.0) {
+//            firstTime = tiempo
+//        }
+//        var newTime = tiempo - firstTime
 
-        if (lastPress < presion || lastPress == 0.0) {
-            series.appendData(DataPoint(newTime, presion), true, 300)
-            lastPress = presion
-        }
+        //if (lastPress < presion || lastPress == 0.0) {
+        series.appendData(DataPoint(tiempo, presion), true, 300)
+        //  lastPress = presion
+        //}
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -304,7 +296,11 @@ class ScanActivity : AppCompatActivity() {
                 .map {
                     try {
                         it[1].toDouble()
-                        it
+                        if (it[1].toDouble() > 180 || it[1].toDouble() < 30 ){
+                            emptyList<String>()
+                        } else {
+                            it
+                        }
                     } catch (e: java.lang.Exception) {
                         emptyList<String>()
                     }
@@ -316,7 +312,6 @@ class ScanActivity : AppCompatActivity() {
                         emptyList()
                     } else {
                         it
-
                     }
                 }
                 .filter { !it.isEmpty() }
@@ -328,17 +323,16 @@ class ScanActivity : AppCompatActivity() {
 
         val disposable = scanPoints.subscribe {
             updateValue(needle, it.pressure.toFloat())
+            var actual = (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - runtime).toDouble()
 
-            var actual = ((System.currentTimeMillis() / 1000) % 60.0)
-//            if(first){
-//                firstTime = actual
-//                first = false
-//            }
-            Log.d(_tag, "time ${it.time} ---- value ${it.pressure}")
+//            Log.d(_tag, "time ${actual}")
+            Log.d(_tag, "time ${actual} ---- value ${it.pressure}")
             addEntry(actual, it.pressure)
-
+            pressureVal = it.pressure
+            canvass.textPaint
             time_measure.add(it.time)
             pressure.add(it.pressure)
+
         }
 
     }

@@ -204,6 +204,10 @@ class BluetoothConnectionService(internal var context: Context) {
             acceptThread!!.start()
         }
     }
+    @Synchronized
+    fun disconnect(){
+        connectThread!!.cancel()
+    }
 
 
     fun startClient(device: BluetoothDevice, uuid: UUID): Observable<String> {
@@ -272,7 +276,7 @@ class BluetoothConnectionService(internal var context: Context) {
                     Log.e(_tag, "write: Error reading Input Stream. " + e.message)
                     // Show error
                     (context as Activity).runOnUiThread {
-                        Toast.makeText(context, "Error on connection, terminating..", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Connection end..", Toast.LENGTH_SHORT).show()
 
                         (context as Activity).finish()
                     }

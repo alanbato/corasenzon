@@ -21,6 +21,7 @@ import android.arch.persistence.room.ColumnInfo
 import android.arch.persistence.room.Entity
 import android.arch.persistence.room.PrimaryKey
 import android.arch.persistence.room.TypeConverters
+import android.graphics.Bitmap
 import android.os.Parcel
 import android.os.Parcelable
 import com.edgardo.corasensor.helpers.Converters
@@ -35,7 +36,9 @@ data class Scan(@ColumnInfo(name = "PressureScanAvg") var pressureAvg: Double?,
                 @ColumnInfo(name = "PressureDiastolicManual") var pressureDiastolicManual: Double? = null,
                 @ColumnInfo(name = "ScanDate") var scanDate: String?,
                 @ColumnInfo(name = "idManual") var idManual: String?,
-                @ColumnInfo(name = "brazo") var brazo: Boolean? //True = right, False = left
+                @ColumnInfo(name = "brazo") var brazo: Boolean?,
+                @ColumnInfo(name = "image") var image: ByteArray?
+        //True = right, False = left
 ) : Parcelable {
     @ColumnInfo(name = "_id")
     @PrimaryKey(autoGenerate = true)
@@ -50,7 +53,9 @@ data class Scan(@ColumnInfo(name = "PressureScanAvg") var pressureAvg: Double?,
             parcel.readValue(Double::class.java.classLoader) as? Double,
             parcel.readString(),
             parcel.readString(),
-            parcel.readValue(Boolean::class.java.classLoader) as? Boolean) {
+            parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
+            parcel.createByteArray()) {
+
         _id = parcel.readInt()
     }
 
@@ -64,6 +69,7 @@ data class Scan(@ColumnInfo(name = "PressureScanAvg") var pressureAvg: Double?,
         parcel.writeString(scanDate)
         parcel.writeString(idManual)
         parcel.writeValue(brazo)
+        parcel.writeByteArray(image)
         parcel.writeInt(_id)
     }
 

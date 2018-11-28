@@ -26,6 +26,7 @@ import android.widget.Toast
 import com.edgardo.corasensor.R
 import com.edgardo.corasensor.Scan.Scan
 import com.edgardo.corasensor.database.ScanDatabase
+import com.edgardo.corasensor.helpers.Converters
 import com.edgardo.corasensor.networkUtility.Executor
 import kotlinx.android.synthetic.main.activity_detail.*
 
@@ -48,6 +49,7 @@ class DetailActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         text_avg_manual.setText(scanRec.pressureAvgManual.toString())
         text_identifier.setText(scanRec.idManual)
         switch_brazo.isChecked = scanRec.brazo!!
+        graph.setImageBitmap(Converters.toBitmap(scanRec.image))
 
         disableEditText(text_pressure_systolic)
         disableEditText(text_pressure_diastolic)
@@ -79,6 +81,7 @@ class DetailActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
             }
         }
     }
+
     override fun onNavigationItemSelected(p0: MenuItem): Boolean {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
