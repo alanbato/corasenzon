@@ -22,21 +22,21 @@ import android.app.ProgressDialog
 import kotlin.math.abs
 
 lateinit var progressDialogConnection: ProgressDialog
-lateinit var fixmmhg: ArrayList<Double>
-lateinit var movemmhg: ArrayList<Double>
-lateinit var pend: ArrayList<Double>
-lateinit var pend_norm_mov: ArrayList<Double>
-lateinit var peak: ArrayList<Double>
-lateinit var start: ArrayList<Double>
-lateinit var start_memory: ArrayList<Double>
-lateinit var start_time: ArrayList<Double>
-lateinit var end_memory: ArrayList<Double>
-lateinit var end_time: ArrayList<Double>
-lateinit var peak_cuff: ArrayList<Double>
-lateinit var peak_ampl: ArrayList<Double>
-lateinit var sys_cand: ArrayList<Double>
-lateinit var dia_cand: ArrayList<Double>
-lateinit var result: ArrayList<Double>
+var fixmmhg: ArrayList<Double> = ArrayList()
+var movemmhg: ArrayList<Double> = ArrayList()
+var pend: ArrayList<Double> = ArrayList()
+var pend_norm_mov: ArrayList<Double> = ArrayList()
+var peak: ArrayList<Double> = ArrayList()
+var start: ArrayList<Double> = ArrayList()
+var start_memory: ArrayList<Double> = ArrayList()
+var start_time: ArrayList<Double> = ArrayList()
+var end_memory: ArrayList<Double> = ArrayList()
+var end_time: ArrayList<Double> = ArrayList()
+var peak_cuff: ArrayList<Double> = ArrayList()
+var peak_ampl: ArrayList<Double> = ArrayList()
+var sys_cand: ArrayList<Double> = ArrayList()
+var dia_cand: ArrayList<Double> = ArrayList()
+var result: ArrayList<Double> = ArrayList()
 var diastolic: Double = 0.0
 var systolic: Double = 0.0
 
@@ -84,7 +84,7 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
 
     promPend = cal_prom(pend)
 
-    for (i in 0..pend.size) {
+    for (i in 0..pend.size - 1) {
         pend[i] -= promPend
     }
     pend_norm_mov.add(0.0)

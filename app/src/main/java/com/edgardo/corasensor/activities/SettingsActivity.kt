@@ -257,6 +257,7 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
             if (application is HeartAssistantApplication) {
                 application.device = btDevices[i]
                 application.uuidConnection = uuidConnection
+
                 Toast.makeText(this, "Device Saved", Toast.LENGTH_SHORT).show()
                 finish()
             }

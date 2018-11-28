@@ -41,7 +41,6 @@ import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
 import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.android.synthetic.main.activity_scan.*
-import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
@@ -51,8 +50,14 @@ import android.graphics.Paint
 import android.widget.Toast
 import android.R.attr.data
 import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
+import android.graphics.Bitmap
 import android.text.TextPaint
-
+import com.jjoe64.graphview.Viewport
+import io.reactivex.Observable
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.Random
 
 class ScanActivity : AppCompatActivity() {
     lateinit var instanceDatabase: ScanDatabase
@@ -63,7 +68,7 @@ class ScanActivity : AppCompatActivity() {
     // Selected devices
     lateinit var selectedBtDevices: BluetoothDevice
     // Communication UUID
-    private val uuidConnection = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+//    private val uuidConnection = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     // List adapter
     // Bluetooth adapter
     var btAdapter: BluetoothAdapter? = null
@@ -74,17 +79,26 @@ class ScanActivity : AppCompatActivity() {
     var firstTime = 0.0
 
     lateinit var series: LineGraphSeries<DataPoint>
+    lateinit var viewport: Viewport
 
+    var time = 0
+    var first = true
     lateinit var time_measure: ArrayList<Double>
     lateinit var pressure: ArrayList<Double>
     lateinit var result: ArrayList<Double>
     lateinit var needle: Needle
+
+    val sdf = SimpleDateFormat("dd/M/yyyy hh:mm:ss")
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_scan)
         btDevices = ArrayList()
+        time_measure = ArrayList()
+        pressure = ArrayList()
+        result = ArrayList()
+
         btAdapter = BluetoothAdapter.getDefaultAdapter()
         btConnection = BluetoothConnectionService(this)
 
@@ -112,8 +126,9 @@ class ScanActivity : AppCompatActivity() {
         val graph = findViewById<View>(R.id.graph) as GraphView
         series = LineGraphSeries()
         graph.addSeries(series)
-        val viewport = graph.viewport
+        viewport = graph.viewport
         viewport.isYAxisBoundsManual = true
+        viewport.setMinX(0.0)
         viewport.setMinY(0.0)
         viewport.setMaxY(180.0)
         viewport.isScrollable = true
@@ -140,6 +155,32 @@ class ScanActivity : AppCompatActivity() {
 
     }
 
+    private fun onClick(v: View) {
+        when (v.id) {
+            R.id.button_cancel -> {
+                finish()
+            }
+            R.id.button_finish -> {
+                viewport.setMaxX(time_measure[time_measure.size - 1])
+                viewport.setMinX(0.0)
+                val image: Bitmap = graph.takeSnapshot()
+
+                result = calculate(this, pressure, time_measure)
+                val currentDate = sdf.format(Date())
+                val avg = (result[0] + result[1]) / 2
+
+                //El scan que se crea con los datos
+                val scan = Scan(brazo = true, idManual = "", pressureAvg = avg, pressureSystolic = result[1], pressureDiastolic = result[0], scanDate = currentDate, pressureSystolicManual = 0.0, pressureDiastolicManual = 0.0, pressureAvgManual = 0.0)
+                ioThread {
+                    instanceDatabase.scanDao().insertScan(scan)
+                }
+                Log.d(_tag, "ID ->>>>>" + scan._id.toString())
+                val intent = Intent(this, DetailActivity::class.java)
+                intent.putExtra("SCAN_KEY", scan)
+                startActivityForResult(intent, 1)
+            }
+        }
+    }
 
     inner class Grade(context: Context, var rotate: Float, var name: Int) : View(context) {
         val paint = Paint()
@@ -235,27 +276,6 @@ class ScanActivity : AppCompatActivity() {
         finish()
     }
 
-    private fun onClick(v: View) {
-        when (v.id) {
-            R.id.button_cancel -> {
-                finish()
-            }
-            R.id.button_finish -> {
-
-                result = calculate(this, pressure, time_measure)
-                //El scan que se crea con los datos
-                val scan = Scan(brazo = true, idManual = "Prueba", pressureAvg = 100.0, pressureSystolic = result[1], pressureDiastolic = result[0], scanDate = "26/10/2018", pressureSystolicManual = 0.0, pressureDiastolicManual = 0.0, pressureAvgManual = 0.0)
-                ioThread {
-                    instanceDatabase.scanDao().insertScan(scan)
-                }
-
-                val intent = Intent(this, DetailActivity::class.java)
-                intent.putExtra("SCAN_KEY", scan)
-                startActivityForResult(intent, 1)
-            }
-        }
-    }
-
 
     /**
      * starting listening service method
@@ -263,26 +283,57 @@ class ScanActivity : AppCompatActivity() {
     private fun startBTConnection(device: BluetoothDevice, uuid: UUID) {
         Log.d(_tag, "startBTConnection: Initializing RFCOM Bluetooth Connection.")
 
-        btConnection.startClient(device, uuid)
-                .debounce(5, TimeUnit.MILLISECONDS)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    try {
-                        val processData = it.split(";")
-                        updateValue(needle, processData[1].toFloat())
-                        addEntry(processData[0].toDouble(), processData[1].toDouble())
-                        Log.d(_tag, "Value " + it)
-                        time_measure.add(processData[0].toDouble())
-                        pressure.add(processData[1].toDouble())
 
-                        // ms Time; mmHG; pulso
-                        //response_data.append("${parData[0]} - ${parData[1]} - ${parData[2]} \n")
+        val scanPoints = btConnection.startClient(device, uuid)
+//        val scanPoints = Observab le.fromIterable(arr)
+                .debounce(10, TimeUnit.MILLISECONDS)
+                .map {
+                    try {
+                        var value = it.trim().replace("\\s".toRegex(), "").split(";")
+
+                        if (value.size > 1) {
+                            value
+                        } else {
+                            emptyList()
+                        }
                     } catch (e: Exception) {
-                        Log.d(_tag, "Data is no in correct format" + it)
+
+                        emptyList<String>()
+                    }
+                }
+                .map {
+                    try {
+                        it[1].toDouble()
+                        it
+                    }catch (e : java.lang.Exception){
+                        emptyList<String>()
                     }
 
                 }
+                .filter { !it.isEmpty() }
+                .map {
+                    ScanPoint(it[1].toDouble())
+                }
+                .observeOn(AndroidSchedulers.mainThread())
+
+
+        val graphDisposable = scanPoints.subscribe {
+            updateValue(needle, it.pressure.toFloat())
+
+            var actual = ((System.currentTimeMillis() / 1000) % 60.0)
+            if(first){
+                firstTime = actual
+                first = false
+            }
+
+            addEntry(actual, it.pressure)
+
+            time_measure.add(actual)
+            pressure.add(it.pressure)
+        }
+
     }
+
 
     /**
      * Function to validate if the phone have BT and check if is turn on
@@ -352,5 +403,5 @@ class ScanActivity : AppCompatActivity() {
 
     }
 
-
+    data class ScanPoint(val pressure: Double)//, val time: Double)
 }

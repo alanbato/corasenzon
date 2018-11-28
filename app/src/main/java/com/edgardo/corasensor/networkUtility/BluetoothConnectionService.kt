@@ -54,7 +54,7 @@ class BluetoothConnectionService(internal var context: Context) {
 
     private var connectedThread: ConnectedThread? = null
 
-    private var emmitter : ObservableEmitter<String>? = null
+    private var emmitter: ObservableEmitter<String>? = null
     val _tag = "BTConnServer"
 
     companion object {
@@ -119,7 +119,7 @@ class BluetoothConnectionService(internal var context: Context) {
     }
 
     /**
-     * Start connection with the devices
+     * Start connection with the fa87c0d0-afac-11de-8a39-0800200c9a66s
      */
     private inner class ConnectThread(device: BluetoothDevice, uuid: UUID) : Thread() {
         private var btSocket: BluetoothSocket? = null
@@ -206,7 +206,7 @@ class BluetoothConnectionService(internal var context: Context) {
     }
 
 
-    fun startClient(device: BluetoothDevice, uuid: UUID) : Observable<String> {
+    fun startClient(device: BluetoothDevice, uuid: UUID): Observable<String> {
         Log.d(_tag, "startClient: Started.")
 
         // Progress for connection
@@ -251,7 +251,7 @@ class BluetoothConnectionService(internal var context: Context) {
         // Listen to data incoming
         override fun run() {
             // Buffer for data
-            val buffer = ByteArray(1024)
+            val buffer = ByteArray(2408)
             var bytes: Int
 
 
@@ -262,6 +262,7 @@ class BluetoothConnectionService(internal var context: Context) {
                     bytes = inStream!!.read(buffer)
                     // parse data
                     val incomingMessage = String(buffer, 0, bytes)
+                    Log.d(_tag, "LOG " + incomingMessage)
 
                     emmitter?.onNext(incomingMessage)
 
