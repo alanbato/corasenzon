@@ -83,6 +83,7 @@ class ScanActivity : AppCompatActivity() {
 
     var time = 0
     var first = true
+    var lastPress = 0.0
     lateinit var time_measure: ArrayList<Double>
     lateinit var pressure: ArrayList<Double>
     lateinit var result: ArrayList<Double>
@@ -120,7 +121,6 @@ class ScanActivity : AppCompatActivity() {
         layout1.addView(needle)
         layout1.addView(canvass)
         layout1.addView(white)
-        needle.setOnClickListener(needle)
 
 
         val graph = findViewById<View>(R.id.graph) as GraphView
@@ -229,7 +229,7 @@ class ScanActivity : AppCompatActivity() {
         }
     }
 
-    inner class Needle(context: Context) : View(context), View.OnClickListener {
+    inner class Needle(context: Context) : View(context) {
         val paint = Paint()
         val textPaint = TextPaint().apply { textSize = 16f }
         override fun onDraw(canvas: Canvas) {
@@ -244,9 +244,6 @@ class ScanActivity : AppCompatActivity() {
             }
         }
 
-        override fun onClick(v: View?) {
-            ObjectAnimator.ofFloat(v, "rotation", v!!.rotation + 10f).start()
-        }
 
     }
 
@@ -269,7 +266,10 @@ class ScanActivity : AppCompatActivity() {
         }
         var newTime = tiempo - firstTime
 
-        series.appendData(DataPoint(newTime, presion), true, 300)
+        if (lastPress < presion || lastPress == 0.0) {
+            series.appendData(DataPoint(newTime, presion), true, 300)
+            lastPress = presion
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -305,30 +305,39 @@ class ScanActivity : AppCompatActivity() {
                     try {
                         it[1].toDouble()
                         it
-                    }catch (e : java.lang.Exception){
+                    } catch (e: java.lang.Exception) {
                         emptyList<String>()
                     }
 
                 }
                 .filter { !it.isEmpty() }
                 .map {
-                    ScanPoint(it[1].toDouble())
+                    if (it[0].isEmpty() || it[1].isEmpty()) {
+                        emptyList()
+                    } else {
+                        it
+
+                    }
+                }
+                .filter { !it.isEmpty() }
+                .map {
+                    ScanPoint(it[0].toDouble(), it[1].toDouble())
                 }
                 .observeOn(AndroidSchedulers.mainThread())
 
 
-        val graphDisposable = scanPoints.subscribe {
+        val disposable = scanPoints.subscribe {
             updateValue(needle, it.pressure.toFloat())
 
             var actual = ((System.currentTimeMillis() / 1000) % 60.0)
-            if(first){
-                firstTime = actual
-                first = false
-            }
-
+//            if(first){
+//                firstTime = actual
+//                first = false
+//            }
+            Log.d(_tag, "time ${it.time} ---- value ${it.pressure}")
             addEntry(actual, it.pressure)
 
-            time_measure.add(actual)
+            time_measure.add(it.time)
             pressure.add(it.pressure)
         }
 
@@ -403,5 +412,5 @@ class ScanActivity : AppCompatActivity() {
 
     }
 
-    data class ScanPoint(val pressure: Double)//, val time: Double)
+    data class ScanPoint(val time: Double, val pressure: Double)//, val time: Double)
 }

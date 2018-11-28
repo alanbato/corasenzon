@@ -270,6 +270,13 @@ class BluetoothConnectionService(internal var context: Context) {
 
                 } catch (e: IOException) {
                     Log.e(_tag, "write: Error reading Input Stream. " + e.message)
+                    // Show error
+                    (context as Activity).runOnUiThread {
+                        Toast.makeText(context, "Error on connection, terminating..", Toast.LENGTH_SHORT).show()
+
+                        (context as Activity).finish()
+                    }
+
                     break
                 }
 

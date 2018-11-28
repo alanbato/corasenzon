@@ -27,7 +27,7 @@ import com.edgardo.corasensor.scanData.ScanData
 import com.edgardo.corasensor.Scan.Scan
 
 
-@Database(entities = [Scan::class, ScanData::class], version = 2, exportSchema = false)
+@Database(entities = [Scan::class, ScanData::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class ScanDatabase : RoomDatabase() {
     abstract fun scanDao(): ScanDao
