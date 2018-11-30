@@ -31,9 +31,9 @@ var pend_norm_mov: ArrayList<Double> = ArrayList()
 var peak: ArrayList<Double> = ArrayList()
 var start: ArrayList<Double> = ArrayList()
 var start_memory: ArrayList<Double> = ArrayList()
-var start_time: ArrayList<Double> = ArrayList()
+var start_time: ArrayList<Long> = ArrayList()
 var end_memory: ArrayList<Double> = ArrayList()
-var end_time: ArrayList<Double> = ArrayList()
+var end_time: ArrayList<Long> = ArrayList()
 var peak_cuff: ArrayList<Double> = ArrayList()
 var peak_ampl: ArrayList<Double> = ArrayList()
 var sys_cand: ArrayList<Double> = ArrayList()
@@ -47,7 +47,7 @@ var promPend = 0.0
 val const_fixmmhg = 4
 val const_prom = 9.0
 
-fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<Double>): ArrayList<Double> {
+fun calculate(context: Context, mmMercury: List<Double>, times: List<Long>):  ArrayList<Double> {
 
     //initprogress dialog
     progressDialogConnection = ProgressDialog.show(context, "Calculating", "Please Wait...", true)
@@ -85,8 +85,9 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
     }
 
     promPend = cal_prom(pend)
+    Log.d("PROM PEND", promPend.toString())
 
-    for (i in 0..pend.size - 1) {
+    for (i in 0 until pend.size - 1) {
         pend[i] -= promPend
     }
     pend_norm_mov.add(0.0)
@@ -125,7 +126,8 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
         }
     }
     Log.d("PEND NORM", pend_norm_mov.toString())
-
+    Log.d("MMERCURY SIZE", mmMercury.size.toString())
+    Log.d("TIMES SIZE", times.size.toString())
     start.add(0.0)
     start.add(0.0)
     start.add(0.0)
@@ -147,9 +149,9 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
 
     for (i in 0..10) {
         start_memory.add(0.0)
-        start_time.add(0.0)
+        start_time.add(0)
         end_memory.add(0.0)
-        end_time.add(0.0)
+        end_time.add(0)
         peak_cuff.add(0.0)
         peak_ampl.add(0.0)
         sys_cand.add(0.0)
@@ -172,7 +174,7 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
         }
         //Los agrega aunque los va a modificar en el siguiente ciclo
         end_memory.add(0.0)
-        end_time.add(0.0)
+        end_time.add(0)
     }
 
     for (i in (end_memory.size - 10) downTo 10) { //Creo que aqui si es end_memory.size menos 1
@@ -195,7 +197,7 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
     for (i in 10 until mmMercury.size - 10) {
         if (peak[i] != 0.0) {
             peak_cuff.add(((end_memory[i] - start_memory[i]) / (end_time[i] - start_time[i])) * (times[i] - start_time[i]) + start_memory[i])
-            Log.d("PEAK CUFF ADD", peak_cuff[i].toString())
+            Log.d("PEAK CUFF ADD", peak_cuff[peak_cuff.size-1].toString())
         } else {
             peak_cuff.add(0.0)
         }

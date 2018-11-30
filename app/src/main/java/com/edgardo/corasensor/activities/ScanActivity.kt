@@ -75,7 +75,7 @@ class ScanActivity : AppCompatActivity() {
     var time = 0
     var end_scan = false
     var lastPress = 0.0
-    lateinit var time_measure: ArrayList<Double>
+    lateinit var time_measure: ArrayList<Long>
     lateinit var pressure: ArrayList<Double>
     lateinit var result: ArrayList<Double>
     lateinit var needle: Needle
@@ -166,12 +166,34 @@ class ScanActivity : AppCompatActivity() {
         viewport.setMinX(0.0)
         val image: ByteArray = Converters.toByteArray(graph.takeSnapshot())
 
-        result = calculate(this, pressure, time_measure)
+        var count = 0
+        var stable_num = 0
+        var prev: Int = 0
+        for (i in 0 until pressure.size -1) {
+            if (pressure[i] > 100 && count > 20) {
+                stable_num = i
+                break
+            }
+            if (pressure[i].toInt() == prev) {
+                count += 1
+            } else {
+                count = 0
+                prev = pressure[i].toInt()
+            }
+        }
+
+        val downPressure = pressure.subList(stable_num, pressure.size - 1)
+        val downTime = time_measure.subList(stable_num, time_measure.size - 1)
+        Log.d("StablePress", downPressure[0].toString())
+        Log.d("StableTime", downTime[0].toString())
+
+        result = calculate(this, downPressure,  downTime)
         val currentDate = sdf.format(Date())
-        val avg = (result[0] + result[1]) / 2
+        val avg = (result[0] * 2 + result[1]) / 3
+        Log.d(_tag, result.toString() )
 
         //El scan que se crea con los datos
-        val scan = Scan(brazo = true, idManual = "", pressureAvg = avg, pressureSystolic = result[1], pressureDiastolic = result[0], scanDate = currentDate, pressureSystolicManual = 0.0, pressureDiastolicManual = 0.0, pressureAvgManual = 0.0, image = image)
+        val scan = Scan(brazo = true, idManual = "", pressureAvg = avg, pressureSystolic = result[1], pressureDiastolic = result[0], scanDate = currentDate, pressureSystolicManual = result[1], pressureDiastolicManual = result[0], pressureAvgManual = 0.0, image = image)
         ioThread {
             val id = instanceDatabase.scanDao().insertScan(scan)
             val sc = instanceDatabase.scanDao().loadScanById(id)
@@ -295,7 +317,7 @@ class ScanActivity : AppCompatActivity() {
                 .map {
                     try {
                         it[1].toDouble()
-                        if (it[1].toDouble() > 280 || it[1].toDouble() < 20) {
+                        if (it[1].toDouble() > 180 || it[1].toDouble() < 20) {
                             emptyList<String>()
                         } else {
                             it
@@ -324,26 +346,27 @@ class ScanActivity : AppCompatActivity() {
 
 
             updateValue(needle, it.pressure.toFloat())
-            var actual = (System.currentTimeMillis() - runtime).toDouble()
+            var actual = (System.currentTimeMillis() - runtime)
 
 //            Log.d(_tag, "time ${actual}")
-            Log.d(_tag, "time ${actual} ---- value ${it.pressure}")
+//            Log.d(_tag, "time ${actual} ---- value ${it.pressure}")
             if (it.pressure <= 25) {
 //                finish_scan()
             }
 
-            addEntry(actual / 100, it.pressure)
+            addEntry(actual / 100.0, it.pressure)
             pressureVal = it.pressure.toInt()
             canvass.textPaint
-            time_measure.add(it.time)
+            time_measure.add(actual)//it.time)
             pressure.add(it.pressure)
 
-            if (it.pressure >= 100){
+            if (it.pressure >= 100) {
                 end_scan = true
             }
 
             white.invalidate()
-            if (end_scan){
+
+            if (end_scan && it.pressure <= 25) {
                 finish_scan()
             }
         }
