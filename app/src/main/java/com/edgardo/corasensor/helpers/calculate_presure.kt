@@ -62,7 +62,7 @@ fun calculate(context: Context, mmMercury: List<Double>, times: List<Long>):  Ar
             else -> fixmmhg.add((mmMercury[i - 1] + mmMercury[i + 1]) / 2.0)
         }
     }
-    var aux: Double = 0.0
+    var aux = 0.0
     movemmhg.add(0.0)
     movemmhg.add(0.0)
     movemmhg.add(0.0)
@@ -83,11 +83,11 @@ fun calculate(context: Context, mmMercury: List<Double>, times: List<Long>):  Ar
     for (i in 5 until (mmMercury.size - 5)) {
         pend.add(movemmhg[i] - movemmhg[i - 1])
     }
-
+    Log.d("PENDS", pend.toString())
     promPend = cal_prom(pend)
-    Log.d("PROM PEND", promPend.toString())
+    Log.d("PROMPEND", promPend.toString())
 
-    for (i in 0 until pend.size - 1) {
+    for (i in 0 until pend.size) {
         pend[i] -= promPend
     }
     pend_norm_mov.add(0.0)
@@ -125,7 +125,7 @@ fun calculate(context: Context, mmMercury: List<Double>, times: List<Long>):  Ar
             peak.add(0.0)
         }
     }
-    Log.d("PEND NORM", pend_norm_mov.toString())
+    Log.d("PENDNORMMOV", pend_norm_mov.toString())
     Log.d("MMERCURY SIZE", mmMercury.size.toString())
     Log.d("TIMES SIZE", times.size.toString())
     start.add(0.0)
@@ -138,7 +138,7 @@ fun calculate(context: Context, mmMercury: List<Double>, times: List<Long>):  Ar
     start.add(0.0)
     start.add(0.0)
     start.add(0.0)
-    for (i in 1 until (mmMercury.size - 10)) {
+    for (i in 10 until (mmMercury.size - 10)) {
         if (pend_norm_mov[i] > pend_norm_mov[i - 1] && (pend_norm_mov[i - 1] * pend_norm_mov[i]) < 0) {
             start.add(movemmhg[i])
         } else {
@@ -146,8 +146,10 @@ fun calculate(context: Context, mmMercury: List<Double>, times: List<Long>):  Ar
         }
     }
 
+    Log.d("Start", start.toString())
 
-    for (i in 0..10) {
+
+    for (i in 0..9) {
         start_memory.add(0.0)
         start_time.add(0)
         end_memory.add(0.0)
@@ -157,7 +159,6 @@ fun calculate(context: Context, mmMercury: List<Double>, times: List<Long>):  Ar
         sys_cand.add(0.0)
         dia_cand.add(0.0)
     }
-
 
     for (i in 10 until (mmMercury.size - 10)) {
         //Adds start_memory
@@ -176,9 +177,13 @@ fun calculate(context: Context, mmMercury: List<Double>, times: List<Long>):  Ar
         end_memory.add(0.0)
         end_time.add(0)
     }
-
-    for (i in (end_memory.size - 10) downTo 10) { //Creo que aqui si es end_memory.size menos 1
-
+    end_memory.add(0.0)
+    end_time.add(0)
+    Log.d("STARTSIZE", start.size.toString())
+    Log.d("TIMESIZE", times.size.toString())
+    Log.d("STARTMEMSIZE", start_memory.size.toString())
+    Log.d("ENDMEMSIZE", end_memory.size.toString())
+    for (i in (mmMercury.size - 11) downTo 10) { //Creo que aqui si es end_memory.size menos 1
         //Adds end_memory
         if (start[i] != 0.0) {
             end_memory[i] = start_memory[i]
@@ -193,10 +198,19 @@ fun calculate(context: Context, mmMercury: List<Double>, times: List<Long>):  Ar
         }
     }
 
+    Log.d("STARTMEM", start_memory.toString())
+    Log.d("ENDMEM", end_memory.toString())
+    Log.d("STARTIME", start_time.toString())
+    Log.d("ENDTIME", end_time.toString())
     //Fills peak_cuff
     for (i in 10 until mmMercury.size - 10) {
         if (peak[i] != 0.0) {
-            peak_cuff.add(((end_memory[i] - start_memory[i]) / (end_time[i] - start_time[i])) * (times[i] - start_time[i]) + start_memory[i])
+            peak_cuff.add(
+                    (end_memory[i] - start_memory[i])
+                    / (end_time[i] - start_time[i])
+                    * (times[i] - start_time[i])
+                    + start_memory[i]
+            )
             Log.d("PEAK CUFF ADD", peak_cuff[peak_cuff.size-1].toString())
         } else {
             peak_cuff.add(0.0)
@@ -207,17 +221,17 @@ fun calculate(context: Context, mmMercury: List<Double>, times: List<Long>):  Ar
     for (i in 10 until mmMercury.size - 10) {
         if (peak[i] != 0.0) {
             peak_ampl.add(peak[i] - peak_cuff[i])
+            Log.d("PEAKAMPLADD", (peak[i] - peak_cuff[i]).toString())
         } else {
             peak_ampl.add(0.0)
         }
     }
     val max_peak_ampl: Double = peak_ampl.max() ?: 0.0
-
-    Log.d("PEAK AMPLS", peak_ampl.toString())
+    Log.d("MAXPEAKAMPL", max_peak_ampl.toString())
 
     for (i in 10 until mmMercury.size - 10) {
         if (peak_ampl[i] != 0.0 && peak_ampl[i] >= 0.5 * max_peak_ampl) {
-            Log.d("PEAK SYST", peak_ampl[i].toString() + peak[i].toString())
+            Log.d("PEAKSYST", peak_ampl[i].toString() + peak[i].toString())
             systolic = peak[i]
         }
         break
@@ -225,7 +239,7 @@ fun calculate(context: Context, mmMercury: List<Double>, times: List<Long>):  Ar
 
     for (i in peak_ampl.size - 1 downTo 10) {
         if (peak_ampl[i] != 0.0 && peak_ampl[i] >= 0.8 * max_peak_ampl) {
-            Log.d("PEAK DIAST", peak_ampl[i].toString() + peak[i].toString())
+            Log.d("PEAKDIAST", peak_ampl[i].toString() + peak[i].toString())
             diastolic = peak[i]
         }
         break

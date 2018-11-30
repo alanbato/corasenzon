@@ -170,11 +170,11 @@ class ScanActivity : AppCompatActivity() {
         var stable_num = 0
         var prev: Int = 0
         for (i in 0 until pressure.size -1) {
-            if (pressure[i] > 100 && count > 20) {
+            if (count > 20) {
                 stable_num = i
                 break
             }
-            if (pressure[i].toInt() == prev) {
+            if (pressure[i] > 100 && Math.abs(pressure[i].toInt() - prev) < 2) {
                 count += 1
             } else {
                 count = 0
@@ -350,9 +350,6 @@ class ScanActivity : AppCompatActivity() {
 
 //            Log.d(_tag, "time ${actual}")
 //            Log.d(_tag, "time ${actual} ---- value ${it.pressure}")
-            if (it.pressure <= 25) {
-//                finish_scan()
-            }
 
             addEntry(actual / 100.0, it.pressure)
             pressureVal = it.pressure.toInt()
