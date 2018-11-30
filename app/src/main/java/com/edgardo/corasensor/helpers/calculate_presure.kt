@@ -24,23 +24,7 @@ import android.util.Log
 import java.util.Random
 
 lateinit var progressDialogConnection: ProgressDialog
-var fixmmhg: ArrayList<Double> = ArrayList()
-var movemmhg: ArrayList<Double> = ArrayList()
-var pend: ArrayList<Double> = ArrayList()
-var pend_norm_mov: ArrayList<Double> = ArrayList()
-var peak: ArrayList<Double> = ArrayList()
-var start: ArrayList<Double> = ArrayList()
-var start_memory: ArrayList<Double> = ArrayList()
-var start_time: ArrayList<Long> = ArrayList()
-var end_memory: ArrayList<Double> = ArrayList()
-var end_time: ArrayList<Long> = ArrayList()
-var peak_cuff: ArrayList<Double> = ArrayList()
-var peak_ampl: ArrayList<Double> = ArrayList()
-var sys_cand: ArrayList<Double> = ArrayList()
-var dia_cand: ArrayList<Double> = ArrayList()
-var result: ArrayList<Double> = ArrayList()
-var diastolic: Double = 0.0
-var systolic: Double = 0.0
+
 
 
 var promPend = 0.0
@@ -48,6 +32,24 @@ val const_fixmmhg = 4
 val const_prom = 9.0
 
 fun calculate(context: Context, mmMercury: List<Double>, times: List<Long>):  ArrayList<Double> {
+
+    var fixmmhg: ArrayList<Double> = ArrayList()
+    var movemmhg: ArrayList<Double> = ArrayList()
+    var pend: ArrayList<Double> = ArrayList()
+    var pend_norm_mov: ArrayList<Double> = ArrayList()
+    var peak: ArrayList<Double> = ArrayList()
+    var start: ArrayList<Double> = ArrayList()
+    var start_memory: ArrayList<Double> = ArrayList()
+    var start_time: ArrayList<Long> = ArrayList()
+    var end_memory: ArrayList<Double> = ArrayList()
+    var end_time: ArrayList<Long> = ArrayList()
+    var peak_cuff: ArrayList<Double> = ArrayList()
+    var peak_ampl: ArrayList<Double> = ArrayList()
+    var sys_cand: ArrayList<Double> = ArrayList()
+    var dia_cand: ArrayList<Double> = ArrayList()
+    var result: ArrayList<Double> = ArrayList()
+    var diastolic: Double = 0.0
+    var systolic: Double = 0.0
 
     //initprogress dialog
     progressDialogConnection = ProgressDialog.show(context, "Calculating", "Please Wait...", true)
@@ -250,6 +252,24 @@ fun calculate(context: Context, mmMercury: List<Double>, times: List<Long>):  Ar
     result.add(systolic)
     Log.d("DIAST", diastolic.toString())
     Log.d("SYSY", systolic.toString())
+
+    Log.d("xzRESULTADOS", 1.0.toString())
+    Log.d("xztimes", times.toString())
+    Log.d("xzhgMercury", mmMercury.toString())
+    Log.d("xzFixedMercury", fixmmhg.toString())
+    Log.d("xzMerMov", movemmhg.toString())
+    Log.d("xzPend", pend.toString())
+    Log.d("xzPendNorm", pend_norm_mov.toString())
+    Log.d("xzPeaks", peak.toString())
+    Log.d("xzStart", start.toString())
+    Log.d("xzSTARTMEMARR", start_memory.toString())
+    Log.d("xzSTARTTimeARR", start_time.toString())
+    Log.d("xzENDMEMARR", end_memory.toString())
+    Log.d("xzENDTIMEARR", end_time.toString())
+    Log.d("xzPEAKCUFF", peak_cuff.toString())
+    Log.d("xzPEAKAMPLEE", peak_ampl.toString())
+
+
     return result
 }
 

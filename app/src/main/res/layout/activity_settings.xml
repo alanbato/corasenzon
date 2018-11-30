@@ -5,7 +5,8 @@
     android:id="@+id/settings_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.SettingsActivity">
+    tools:context=".activities.SettingsActivity"
+    android:orientation="vertical">
 
     <Button
         android:id="@+id/button_discover"
