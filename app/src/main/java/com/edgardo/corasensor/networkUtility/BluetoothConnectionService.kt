@@ -255,7 +255,7 @@ class BluetoothConnectionService(internal var context: Context) {
         // Listen to data incoming
         override fun run() {
             // Buffer for data
-            val buffer = ByteArray(2408)
+            val buffer = ByteArray(1024)
             var bytes: Int
 
 
@@ -263,9 +263,10 @@ class BluetoothConnectionService(internal var context: Context) {
             while (true) {
                 // Read from the InputStream
                 try {
-                    bytes = inStream!!.read(buffer)
+                    //bytes = inStream!!.read(buffer)
                     // parse data
-                    val incomingMessage = String(buffer, 0, bytes)
+                    val incomingMessage = inStream!!.bufferedReader().readLine()
+                    //val incomingMessage = String(buffer, 0, bytes)
                     Log.d(_tag, "LOG " + incomingMessage)
 
                     emmitter?.onNext(incomingMessage)

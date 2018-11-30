@@ -33,7 +33,7 @@ interface ScanDao {
     fun getAnyScan(): Int
 
     @Insert
-    fun insertScan(medicion: Scan)
+    fun insertScan(medicion: Scan): Long
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
     fun updateScan(medicion: Scan)
@@ -42,7 +42,8 @@ interface ScanDao {
     fun deleteScan(medicion: Scan)
 
     @Query("SELECT * FROM Scan WHERE _id = :id")
-    fun loadScanById(id: Int): Scan
+    fun loadScanById(id: Long): Scan
+
 
     // TODO: Agregar query con join de la tabla de scan y dato para un scan
 }

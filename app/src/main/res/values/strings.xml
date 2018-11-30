@@ -24,14 +24,14 @@
 
     <!--Detail view-->
     <string name="label_detail_pressure_systolic">Systolic</string>
-    <string name="label_detail_pressure_systolic_manual">Systolic Manual</string>
+    <string name="label_detail_pressure_systolic_manual">Systolic \n Manual</string>
 
 
     <string name="label_detail_pressure_diastolic">Diastolic</string>
     <string name="label_identifier">Identifier</string>
     <string name="label_detail_pressure_diastolic_manual">Diastolic Manual</string>
-    <string name="label_detail_pressure_avg_manual">Avg Pressure Manual</string>
-    <string name="label_detail_pressure_avg">Avg Pressure</string>
+    <string name="label_detail_pressure_avg_manual">Avg Manual</string>
+    <string name="label_detail_pressure_avg">Avg</string>
     <string name="button_detail_save">Save</string>
 
 
