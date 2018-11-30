@@ -19,8 +19,9 @@ package com.edgardo.corasensor.helpers
 
 import android.content.Context
 import android.app.ProgressDialog
-import java.util.*
 import kotlin.math.abs
+import android.util.Log
+import java.util.Random
 
 lateinit var progressDialogConnection: ProgressDialog
 var fixmmhg: ArrayList<Double> = ArrayList()
@@ -52,24 +53,24 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
     progressDialogConnection = ProgressDialog.show(context, "Calculating", "Please Wait...", true)
 
     fixmmhg.add(mmMercury[0])
-    fixmmhg.add(mmMercury[0])
+    fixmmhg.add(mmMercury[1])
 //    calcular fixmmHG
-    for (i in 2 until (mmMercury.size - 2)) {
+    for (i in 2 until (mmMercury.size - 1)) {
         when {
             abs(mmMercury[i] - mmMercury[i - 1]) < const_fixmmhg -> fixmmhg.add(mmMercury[i])
             abs(mmMercury[i - 1] - mmMercury[i - 2]) >= const_fixmmhg -> fixmmhg.add(mmMercury[i])
             else -> fixmmhg.add((mmMercury[i - 1] + mmMercury[i + 1]) / 2.0)
         }
     }
-    var aux = 0
+    var aux: Double = 0.0
     movemmhg.add(0.0)
     movemmhg.add(0.0)
     movemmhg.add(0.0)
     movemmhg.add(0.0)
-    for (i in 4 until (mmMercury.size - 6)) {
-
+    for (i in 4 until (mmMercury.size - 5)) {
+        aux = 0.0
         for (j in (i - 4)..(i + 4)) {
-            aux += j
+            aux += fixmmhg[j]
         }
         movemmhg.add(aux / const_prom)
 
@@ -79,7 +80,7 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
     pend.add(0.0)
     pend.add(0.0)
     pend.add(0.0)
-    for (i in 5 until (mmMercury.size - 6)) {
+    for (i in 5 until (mmMercury.size - 5)) {
         pend.add(movemmhg[i] - movemmhg[i - 1])
     }
 
@@ -97,10 +98,10 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
     pend_norm_mov.add(0.0)
     pend_norm_mov.add(0.0)
     pend_norm_mov.add(0.0)
-    for (i in 9 until (mmMercury.size - 10)) {
-
+    for (i in 9 until (mmMercury.size - 9)) {
+        aux = 0.0
         for (j in (i - 4)..(i + 4)) {
-            aux += j
+            aux += pend[j]
         }
         pend_norm_mov.add(aux / const_prom)
     }
@@ -118,10 +119,12 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
     for (i in 10 until (mmMercury.size - 10)) {
         if (pend_norm_mov[i] < pend_norm_mov[i - 1] && (pend_norm_mov[i - 1] * pend_norm_mov[i]) < 0) {
             peak.add(movemmhg[i])
+            Log.d("PEAK ADD", movemmhg[i].toString())
         } else {
             peak.add(0.0)
         }
     }
+    Log.d("PEND NORM", pend_norm_mov.toString())
 
     start.add(0.0)
     start.add(0.0)
@@ -133,7 +136,7 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
     start.add(0.0)
     start.add(0.0)
     start.add(0.0)
-    for (i in 10 until (mmMercury.size - 10)) {
+    for (i in 1 until (mmMercury.size - 10)) {
         if (pend_norm_mov[i] > pend_norm_mov[i - 1] && (pend_norm_mov[i - 1] * pend_norm_mov[i]) < 0) {
             start.add(movemmhg[i])
         } else {
@@ -142,12 +145,19 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
     }
 
 
-    start_memory.add(0.0)
-    start_time.add(0.0)
-    end_memory.add(0.0)
-    end_time.add(0.0)
+    for (i in 0..10) {
+        start_memory.add(0.0)
+        start_time.add(0.0)
+        end_memory.add(0.0)
+        end_time.add(0.0)
+        peak_cuff.add(0.0)
+        peak_ampl.add(0.0)
+        sys_cand.add(0.0)
+        dia_cand.add(0.0)
+    }
 
-    for (i in 1 until (mmMercury.size - 10)) {
+
+    for (i in 10 until (mmMercury.size - 10)) {
         //Adds start_memory
         if (start[i] != 0.0) {
             start_memory.add(start[i])
@@ -165,11 +175,11 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
         end_time.add(0.0)
     }
 
-    for (i in (end_memory.size - 1)..10) { //Creo que aqui si es end_memory.size menos 1
+    for (i in (end_memory.size - 10) downTo 10) { //Creo que aqui si es end_memory.size menos 1
 
         //Adds end_memory
         if (start[i] != 0.0) {
-            end_memory[i] = start[i]
+            end_memory[i] = start_memory[i]
         } else {
             end_memory[i] = end_memory[i + 1]
         }
@@ -182,45 +192,48 @@ fun calculate(context: Context, mmMercury: ArrayList<Double>, times: ArrayList<D
     }
 
     //Fills peak_cuff
-    for (i in 0 until mmMercury.size - 10) {
+    for (i in 10 until mmMercury.size - 10) {
         if (peak[i] != 0.0) {
             peak_cuff.add(((end_memory[i] - start_memory[i]) / (end_time[i] - start_time[i])) * (times[i] - start_time[i]) + start_memory[i])
+            Log.d("PEAK CUFF ADD", peak_cuff[i].toString())
         } else {
             peak_cuff.add(0.0)
         }
     }
 
     //Fills peak_amp
-    for (i in 0 until mmMercury.size - 10) {
+    for (i in 10 until mmMercury.size - 10) {
         if (peak[i] != 0.0) {
             peak_ampl.add(peak[i] - peak_cuff[i])
         } else {
             peak_ampl.add(0.0)
         }
     }
-    var max_peak_ampl: Double = peak_ampl.max() ?: 0.0
+    val max_peak_ampl: Double = peak_ampl.max() ?: 0.0
 
-    for (i in 0 until mmMercury.size - 10) {
+    Log.d("PEAK AMPLS", peak_ampl.toString())
+
+    for (i in 10 until mmMercury.size - 10) {
         if (peak_ampl[i] != 0.0 && peak_ampl[i] >= 0.5 * max_peak_ampl) {
+            Log.d("PEAK SYST", peak_ampl[i].toString() + peak[i].toString())
             systolic = peak[i]
-        } else {
-            sys_cand.add(0.0)
         }
+        break
     }
 
-    for (i in peak_ampl.size - 1..0) {
+    for (i in peak_ampl.size - 1 downTo 10) {
         if (peak_ampl[i] != 0.0 && peak_ampl[i] >= 0.8 * max_peak_ampl) {
+            Log.d("PEAK DIAST", peak_ampl[i].toString() + peak[i].toString())
             diastolic = peak[i]
-        } else {
-            sys_cand.add(0.0)
         }
+        break
     }
     progressDialogConnection.dismiss()
-    systolic = (Random().nextInt(9) + 120).toDouble()
-    diastolic = systolic - 50 + Random().nextInt(4) - 8
 
     result.add(diastolic)
     result.add(systolic)
+    Log.d("DIAST", diastolic.toString())
+    Log.d("SYSY", systolic.toString())
     return result
 }
 
