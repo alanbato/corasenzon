@@ -46,9 +46,9 @@ class DetailActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         text_pressure_systolic.setText(scanRec.pressureSystolic.toString())
         text_pressure_diastolic.setText(scanRec.pressureDiastolic.toString())
         text_presure_avg.setText(scanRec.pressureAvg.toString())
-        text_systolic_manual.setText(scanRec.pressureSystolicManual.toString())
-        text_diastolic_manual.setText(scanRec.pressureDiastolicManual.toString())
-        text_avg_manual.setText(scanRec.pressureAvgManual.toString())
+        text_systolic_manual.setText("")
+        text_diastolic_manual.setText("")
+        text_avg_manual.setText("")
         text_identifier.setText(scanRec.idManual)
         switch_brazo.isChecked = scanRec.brazo!!
         if (switch_brazo.isChecked) {
@@ -61,6 +61,7 @@ class DetailActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         disableEditText(text_pressure_systolic)
         disableEditText(text_pressure_diastolic)
         disableEditText(text_presure_avg)
+        disableEditText(text_avg_manual)
 
         switch_brazo.setOnClickListener { onClick(it) }
 
@@ -74,30 +75,28 @@ class DetailActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
 
         when (view.id) {
             R.id.button_save -> {
-                Executor.ioThread {
-                    scanRec.pressureSystolicManual = text_systolic_manual.text.toString().toDouble()
-                    scanRec.pressureDiastolicManual = text_diastolic_manual.text.toString().toDouble()
-                    scanRec.pressureAvgManual = text_avg_manual.text.toString().toDouble()
-                    scanRec.brazo = switch_brazo.isChecked
-                    scanRec.idManual = text_identifier.text.toString()
+                if(camposLlenos()){
+                    Executor.ioThread {
+                        scanRec.pressureSystolicManual = text_systolic_manual.text.toString().toDouble()
+                        scanRec.pressureDiastolicManual = text_diastolic_manual.text.toString().toDouble()
+                        scanRec.pressureAvgManual = (text_systolic_manual.text.toString().toDouble() + (2 * text_diastolic_manual.text.toString().toDouble()))/3
+                        scanRec.brazo = switch_brazo.isChecked
+                        scanRec.idManual = text_identifier.text.toString()
 
-                    instanceDatabase.scanDao().updateScan(scanRec)
-                    runOnUiThread {
-                        Toast.makeText(applicationContext, applicationContext.getString(R.string.save), Toast.LENGTH_LONG).show()
-                        finish()
+                        instanceDatabase.scanDao().updateScan(scanRec)
+                        runOnUiThread {
+                            Toast.makeText(applicationContext, applicationContext.getString(R.string.save), Toast.LENGTH_LONG).show()
+                            finish()
+                        }
                     }
+                }else{
+                    Toast.makeText(applicationContext, "There are some empty fields", Toast.LENGTH_LONG).show()
                 }
+
             }
             R.id.button_dont_save -> {
                 Toast.makeText(applicationContext, applicationContext.getString(R.string.dont_save), Toast.LENGTH_LONG).show()
                 finish()
-//            Executor.ioThread {
-//                instanceDatabase.scanDao().updateScan(scanRec)
-//                runOnUiThread {
-//                    Toast.makeText(applicationContext, applicationContext.getString(R.string.dont_save), Toast.LENGTH_LONG).show()
-//                    finish()
-//                }
-//            }
             }
             R.id.switch_brazo -> {
                 if (switch_brazo.isChecked) {
@@ -118,6 +117,18 @@ class DetailActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         editText.isEnabled = false
         editText.isCursorVisible = false
         editText.keyListener = null
+    }
+
+        fun camposLlenos():Boolean{
+            var llenos = true;
+
+            if(text_diastolic_manual.text.toString() == "") {
+                llenos = false
+            }
+            if(text_systolic_manual.text.toString() == "") {
+                llenos = false
+            }
+            return llenos
     }
 
 }
