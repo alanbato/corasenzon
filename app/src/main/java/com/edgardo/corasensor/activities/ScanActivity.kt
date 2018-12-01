@@ -123,7 +123,6 @@ class ScanActivity : AppCompatActivity() {
         viewport = graph.viewport
         viewport.isYAxisBoundsManual = true
         viewport.setMinX(0.0)
-        viewport.setMinX(15.0)
         viewport.setMinY(0.0)
         viewport.setMaxY(180.0)
         viewport.isScrollable = true
