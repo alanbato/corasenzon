@@ -51,6 +51,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
+import kotlin.math.roundToInt
 
 class ScanActivity : AppCompatActivity() {
     lateinit var instanceDatabase: ScanDatabase
@@ -122,6 +123,7 @@ class ScanActivity : AppCompatActivity() {
         viewport = graph.viewport
         viewport.isYAxisBoundsManual = true
         viewport.setMinX(0.0)
+        viewport.setMinX(15.0)
         viewport.setMinY(0.0)
         viewport.setMaxY(180.0)
         viewport.isScrollable = true
@@ -162,9 +164,7 @@ class ScanActivity : AppCompatActivity() {
     private fun finish_scan() {
         btConnection.disconnect()
         var finishTime = (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - runtime).toDouble()
-        viewport.setMaxX(finishTime)
-        viewport.setMinX(0.0)
-        val image: ByteArray = Converters.toByteArray(graph.takeSnapshot())
+
 
         var count = 0
         var stable_num = 0
@@ -187,13 +187,33 @@ class ScanActivity : AppCompatActivity() {
         Log.d("StablePress", downPressure[0].toString())
         Log.d("StableTime", downTime[0].toString())
 
+
+
+        //viewport.setMaxX(downTime[downTime.size - 1].toDouble())
+        //viewport.setMinX(downTime[0].toDouble())
+        val graphPhoto = findViewById<View>(R.id.graph) as GraphView
+        var viewportPhoto = graph.viewport
+        viewportPhoto.isYAxisBoundsManual = true
+        viewportPhoto.setMinX(downTime[0].toDouble())
+        viewportPhoto.setMaxX(downTime[downTime.size - 1].toDouble())
+        viewportPhoto.setMinY(0.0)
+        viewportPhoto.setMaxY(180.0)
+        var seriesPhoto: LineGraphSeries<DataPoint>
+        seriesPhoto = LineGraphSeries()
+
+        for(i in 0 until downPressure.size){
+            seriesPhoto.appendData(DataPoint(downTime[i].toDouble(), downPressure[i]), false, 600)
+        }
+        graphPhoto.addSeries(seriesPhoto)
+        val image: ByteArray = Converters.toByteArray(graphPhoto.takeSnapshot())
+
         result = calculate(this, downPressure,  downTime)
         val currentDate = sdf.format(Date())
         val avg = (result[0] * 2 + result[1]) / 3
         Log.d(_tag, result.toString() )
 
         //El scan que se crea con los datos
-        val scan = Scan(brazo = true, idManual = "", pressureAvg = avg, pressureSystolic = result[1], pressureDiastolic = result[0], scanDate = currentDate, pressureSystolicManual = result[1], pressureDiastolicManual = result[0], pressureAvgManual = 0.0, image = image)
+        val scan = Scan(brazo = true, idManual = "", pressureAvg = avg.roundToInt().toDouble(), pressureSystolic = result[1].roundToInt().toDouble(), pressureDiastolic = result[0].roundToInt().toDouble(), scanDate = currentDate, pressureSystolicManual = result[1].roundToInt().toDouble(), pressureDiastolicManual = result[0].roundToInt().toDouble(), pressureAvgManual = avg.roundToInt().toDouble(), image = image)
         ioThread {
             val id = instanceDatabase.scanDao().insertScan(scan)
             val sc = instanceDatabase.scanDao().loadScanById(id)
@@ -220,9 +240,6 @@ class ScanActivity : AppCompatActivity() {
             val centerY = height.toFloat() / 2
             paint.strokeWidth = 15f
             canvas.drawLine(centerX, centerY, centerX, centerY + 320, paint).apply {
-                rotation = rotate
-            }
-            canvas.drawText(name.toString(), centerX, centerY + 370, textPaint).apply {
                 rotation = rotate
             }
         }
@@ -316,7 +333,7 @@ class ScanActivity : AppCompatActivity() {
                 .map {
                     try {
                         it[1].toDouble()
-                        if (it[1].toDouble() > 200 || it[1].toDouble() < 10) {
+                        if (it[1].toDouble() > 180 || it[1].toDouble() < 10) {
                             emptyList<String>()
                             //it
                         } else {
@@ -363,7 +380,8 @@ class ScanActivity : AppCompatActivity() {
 
             white.invalidate()
 
-            if (end_scan && it.pressure <= 25) {
+            if (end_scan && it.pressure <= 45
+            ) {
                 finish_scan()
             }
         }

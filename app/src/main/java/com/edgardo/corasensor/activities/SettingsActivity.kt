@@ -186,7 +186,7 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
         // Check for permissions on manifest
         checkBTPermissions()
-        enableDicvoveringMode()
+        //enableDicvoveringMode()
 
         if (btAdapter!!.isDiscovering) {
             btAdapter!!.cancelDiscovery()
@@ -309,7 +309,6 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
 
         val intentFilter = IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED)
         registerReceiver(onBTChangeState, intentFilter)
-
     }
 
     /**
@@ -394,12 +393,12 @@ class SettingsActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
         Log.d(_tag, "onDestroy: called.")
         super.onDestroy()
         try {
+            unregisterReceiver(onBTChangeState)
             unregisterReceiver(changeOnAction)
             unregisterReceiver(pairingStatusChange)
             unregisterReceiver(updateListAdapter)
-            unregisterReceiver(onBTChangeState)
         } catch (e: Exception) {
-
+            Log.d("ErrorBT: ", e.toString())
         }
 
     }
