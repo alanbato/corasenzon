@@ -299,7 +299,6 @@ class ScanActivity : AppCompatActivity() {
 
 
         val scanPoints = btConnection.startClient(device, uuid)
-                .debounce(3, TimeUnit.MILLISECONDS)
                 .map {
                     try {
                         var value = it.trim().replace("\\s".toRegex(), "").split(";")
@@ -317,8 +316,9 @@ class ScanActivity : AppCompatActivity() {
                 .map {
                     try {
                         it[1].toDouble()
-                        if (it[1].toDouble() > 180 || it[1].toDouble() < 20) {
+                        if (it[1].toDouble() > 200 || it[1].toDouble() < 10) {
                             emptyList<String>()
+                            //it
                         } else {
                             it
                         }

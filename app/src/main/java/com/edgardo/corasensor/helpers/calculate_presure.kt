@@ -222,7 +222,15 @@ fun calculate(context: Context, mmMercury: List<Double>, times: List<Long>):  Ar
     //Fills peak_amp
     for (i in 10 until mmMercury.size - 10) {
         if (peak[i] != 0.0) {
-            peak_ampl.add(peak[i] - peak_cuff[i])
+            val ampl = peak[i] - peak_cuff[i]
+            if(ampl >= 2.5)
+            {
+                peak_ampl.add(0.0)
+            }
+            else{
+                peak_ampl.add(ampl)
+            }
+
             Log.d("PEAKAMPLADD", (peak[i] - peak_cuff[i]).toString())
         } else {
             peak_ampl.add(0.0)
@@ -232,19 +240,19 @@ fun calculate(context: Context, mmMercury: List<Double>, times: List<Long>):  Ar
     Log.d("MAXPEAKAMPL", max_peak_ampl.toString())
 
     for (i in 10 until mmMercury.size - 10) {
-        if (peak_ampl[i] != 0.0 && peak_ampl[i] >= 0.5 * max_peak_ampl) {
+        if ((peak_ampl[i] != 0.0) && (peak_ampl[i] >=(0.5 * max_peak_ampl))) {
             Log.d("PEAKSYST", peak_ampl[i].toString() + peak[i].toString())
             systolic = peak[i]
+            break
         }
-        break
     }
 
     for (i in peak_ampl.size - 1 downTo 10) {
         if (peak_ampl[i] != 0.0 && peak_ampl[i] >= 0.8 * max_peak_ampl) {
             Log.d("PEAKDIAST", peak_ampl[i].toString() + peak[i].toString())
             diastolic = peak[i]
+            break
         }
-        break
     }
     progressDialogConnection.dismiss()
 
